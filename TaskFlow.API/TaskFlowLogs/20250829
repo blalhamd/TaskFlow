@@ -1,0 +1,138 @@
+2025-08-29 14:28:17.947 +03:00 [Warning] [] [Microsoft.EntityFrameworkCore.Model.Validation] [] []: The foreign key property '"Developer"."UserId1"' was created in shadow state because a conflicting property with the simple name '"UserId"' exists in the entity type, but is either not mapped, is already used for another relationship, or is incompatible with the associated primary key type. See https://aka.ms/efcore-relationships for information on mapping relationships in EF Core.
+2025-08-29 14:28:17.989 +03:00 [Warning] [] [Microsoft.EntityFrameworkCore.Model.Validation] [] []: The foreign key property '"TaskEntity"."AssignedToUserId1"' was created in shadow state because a conflicting property with the simple name '"AssignedToUserId"' exists in the entity type, but is either not mapped, is already used for another relationship, or is incompatible with the associated primary key type. See https://aka.ms/efcore-relationships for information on mapping relationships in EF Core.
+2025-08-29 14:28:21.048 +03:00 [Error] [] [TaskFlow.API.Controllers.DevelopersController] [] []: developer not found with 12
+2025-08-29 14:28:21.069 +03:00 [Information] [] [Serilog.AspNetCore.RequestLoggingMiddleware] [] []: HTTP "GET" "/api/developers/12" responded 200 in 43.7425 ms
+2025-08-29 14:28:25.148 +03:00 [Error] [] [TaskFlow.API.Controllers.DevelopersController] [] []: developer not found with 11
+2025-08-29 14:28:25.152 +03:00 [Information] [] [Serilog.AspNetCore.RequestLoggingMiddleware] [] []: HTTP "GET" "/api/developers/11" responded 200 in 5.1018 ms
+2025-08-29 14:28:27.511 +03:00 [Error] [] [TaskFlow.API.Middlewares.ErrorHandlingMiddleware] [] []: An unhandled error occurred during request processing for path "/api/Developers"
+TaskFlow.Shared.Exceptions.BadRequestException: data is null
+   at TaskFlow.API.Controllers.DevelopersController.Get() in C:\Users\DELL\Desktop\LinkedinProject\TaskFlow\TaskFlow.API\Controllers\DevelopersController.cs:line 20
+   at lambda_method20(Closure, Object, Object[])
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.SyncActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.InvokeActionMethodAsync()
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.InvokeNextActionFilterAsync()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.InvokeInnerFilterAsync()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at TaskFlow.API.Middlewares.ErrorHandlingMiddleware.InvokeAsync(HttpContext context) in C:\Users\DELL\Desktop\LinkedinProject\TaskFlow\TaskFlow.API\Middlewares\ErrorHandlingMiddleware.cs:line 25
+2025-08-29 14:28:27.573 +03:00 [Error] [] [Serilog.AspNetCore.RequestLoggingMiddleware] [] []: HTTP "GET" "/api/Developers" responded 500 in 76.0485 ms
+2025-08-29 14:28:27.766 +03:00 [Error] [] [TaskFlow.API.Middlewares.ErrorHandlingMiddleware] [] []: An unhandled error occurred during request processing for path "/api/Developers"
+TaskFlow.S2025-08-29 15:46:47.373 +03:00 [Warning] [] [Microsoft.EntityFrameworkCore.Model.Validation] [] []: The foreign key property '"Developer"."UserId1"' was created in shadow state because a conflicting property with the simple name '"UserId"' exists in the entity type, but is either not mapped, is already used for another relationship, or is incompatible with the associated primary key type. See https://aka.ms/efcore-relationships for information on mapping relationships in EF Core.
+2025-08-29 15:46:47.403 +03:00 [Warning] [] [Microsoft.EntityFrameworkCore.Model.Validation] [] []: The foreign key property '"TaskEntity"."AssignedToUserId1"' was created in shadow state because a conflicting property with the simple name '"AssignedToUserId"' exists in the entity type, but is either not mapped, is already used for another relationship, or is incompatible with the associated primary key type. See https://aka.ms/efcore-relationships for information on mapping relationships in EF Core.
+2025-08-29 15:46:54.261 +03:00 [Warning] [] [LuckyPennySoftware.AutoMapper.License] [] []: You do not have a valid license key for the Lucky Penny software AutoMapper. This is allowed for development and testing scenarios. If you are running in production you are required to have a licensed version. Please visit https://luckypennysoftware.com to obtain a valid license.
+2025-08-29 15:46:54.328 +03:00 [Information] [] [TaskFlow.Business.Services.DeveloperService] [] []: Fetching developers page 1 with size 10
+2025-08-29 15:46:54.949 +03:00 [Warning] [] [Microsoft.EntityFrameworkCore.Query] [] []: The query uses a row limiting operator ('Skip'/'Take') without an 'OrderBy' operator. This may lead to unpredictable results. If the 'Distinct' operator is used after 'OrderBy', then make sure to use the 'OrderBy' operator after 'Distinct' as the ordering would otherwise get erased.
+2025-08-29 15:46:54.950 +03:00 [Warning] [] [Microsoft.EntityFrameworkCore.Query] [] []: The query uses a row limiting operator ('Skip'/'Take') without an 'OrderBy' operator. This may lead to unpredictable results. If the 'Distinct' operator is used after 'OrderBy', then make sure to use the 'OrderBy' operator after 'Distinct' as the ordering would otherwise get erased.
+2025-08-29 15:46:55.228 +03:00 [Information] [] [Serilog.AspNetCore.RequestLoggingMiddleware] [] []: HTTP "GET" "/api/v1/Developers" responded 200 in 1043.0531 ms
+2025-08-29 15:47:58.933 +03:00 [Information] [] [TaskFlow.Business.Services.DeveloperService] [] []: Get developer with 07e7d9d5-264e-428c-898e-28010fd61bf3
+2025-08-29 15:47:59.736 +03:00 [Warning] [] [TaskFlow.Business.Services.DeveloperService] [] []: Developer with 07e7d9d5-264e-428c-898e-28010fd61bf3 is not exist
+2025-08-29 15:47:59.745 +03:00 [Error] [] [TaskFlow.API.Middlewares.ErrorHandlingMiddleware] [] []: An unhandled error occurred during request processing for path "/api/v1/Developers/07E7D9D5-264E-428C-898E-28010FD61BF3"
+TaskFlow.Shared.Exceptions.ItemNotFoundException: Developer is not exist
+   at TaskFlow.Business.Services.DeveloperService.GetById(Guid id) in C:\Users\DELL\Desktop\LinkedinProject\TaskFlow\TaskFlow.Business\Services\DeveloperService.cs:line 160
+   at TaskFlow.API.Controllers.DevelopersController.GetDeveloper(Guid id) in C:\Users\DELL\Desktop\LinkedinProject\TaskFlow\TaskFlow.API\Controllers\DevelopersController.cs:line 48
+   at lambda_method56(Closure, Object)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.AwaitableObjectResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at TaskFlow.API.Middlewares.ErrorHandlingMiddleware.InvokeAsync(HttpContext context) in C:\Users\DELL\Desktop\LinkedinProject\TaskFlow\TaskFlow.API\Middlewares\ErrorHandlingMiddleware.cs:line 25
+2025-08-29 15:48:07.879 +03:00 [Error] [] [Serilog.AspNetCore.RequestLoggingMiddleware] [] []: HTTP "GET" "/api/v1/Developers/07E7D9D5-264E-428C-898E-28010FD61BF3" responded 500 in 8968.9440 ms
+2025-08-29 15:48:13.417 +03:00 [Information] [] [TaskFlow.Business.Services.DeveloperService] [] []: Get developer with 07e7d9d5-264e-428c-898e-28010fd61bf3
+2025-08-29 15:48:13.429 +03:00 [Warning] [] [TaskFlow.Business.Services.DeveloperService] [] []: Developer with 07e7d9d5-264e-428c-898e-28010fd61bf3 is not exist
+2025-08-29 15:48:13.429 +03:00 [Error] [] [TaskFlow.API.Middlewares.ErrorHandlingMiddleware] [] []: An unhandled error occurred during request processing for path "/api/v1/Developers/07E7D9D5-264E-428C-898E-28010FD61BF3"
+TaskFlow.Shared.Exceptions.ItemNotFoundException: Developer is not exist
+   at TaskFlow.Business.Services.DeveloperService.GetById(Guid id) in C:\Users\DELL\Desktop\LinkedinProject\TaskFlow\TaskFlow.Business\Services\DeveloperService.cs:line 160
+   at TaskFlow.API.Controllers.DevelopersController.GetDeveloper(Guid id) in C:\Users\DELL\Desktop\LinkedinProject\TaskFlow\TaskFlow.API\Controllers\DevelopersController.cs:line 48
+   at lambda_method56(Closure, Object)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.AwaitableObjectResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at TaskFlow.API.Middlewares.ErrorHandlingMiddleware.InvokeAsync(HttpContext context) in C:\Users\DELL\Desktop\LinkedinProject\TaskFlow\TaskFlow.API\Middlewares\ErrorHandlingMiddleware.cs:line 25
+2025-08-29 15:48:13.445 +03:00 [Error] [] [Serilog.AspNetCore.RequestLoggingMiddleware] [] []: HTTP "GET" "/api/v1/Developers/07E7D9D5-264E-428C-898E-28010FD61BF3" responded 500 in 43.1517 ms
+2025-08-29 15:48:17.825 +03:00 [Information] [] [TaskFlow.Business.Services.DeveloperService] [] []: Get developer with 07e7d9d5-264e-428c-898e-28010fd61bf3
+2025-08-29 15:48:17.830 +03:00 [Warning] [] [TaskFlow.Business.Services.DeveloperService] [] []: Developer with 07e7d9d5-264e-428c-898e-28010fd61bf3 is not exist
+2025-08-29 15:48:17.831 +03:00 [Error] [] [TaskFlow.API.Middlewares.ErrorHandlingMiddleware] [] []: An unhandled error occurred during request processing for path "/api/v1/Developers/07E7D9D5-264E-428C-898E-28010FD61BF3"
+TaskFlow.Shared.Exceptions.ItemNotFoundException: Developer is not exist
+   at TaskFlow.Business.Services.DeveloperService.GetById(Guid id) in C:\Users\DELL\Desktop\LinkedinProject\TaskFlow\TaskFlow.Business\Services\DeveloperService.cs:line 160
+   at TaskFlow.API.Controllers.DevelopersController.GetDeveloper(Guid id) in C:\Users\DELL\Desktop\LinkedinProject\TaskFlow\TaskFlow.API\Controllers\DevelopersController.cs:line 48
+   at lambda_method56(Closure, Object)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.AwaitableObjectResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at TaskFlow.API.Middlewares.ErrorHandlingMiddleware.InvokeAsync(HttpContext context) in C:\Users\DELL\Desktop\LinkedinProject\TaskFlow\TaskFlow.API\Middlewares\ErrorHandlingMiddleware.cs:line 25
+2025-08-29 15:48:17.847 +03:00 [Error] [] [Serilog.AspNetCore.RequestLoggingMiddleware] [] []: HTTP "GET" "/api/v1/Developers/07E7D9D5-264E-428C-898E-28010FD61BF3" responded 500 in 22.8751 ms
+2025-08-29 15:50:00.875 +03:00 [Information] [] [Serilog.AspNetCore.RequestLoggingMiddleware] [] []: HTTP "GET" "/swagger/index.html" responded 200 in 76.9228 ms
+2025-08-29 15:50:01.234 +03:00 [Information] [] [Serilog.AspNetCore.RequestLoggingMiddleware] [] []: HTTP "GET" "/openapi/v1.json" responded 200 in 199.9347 ms
+2025-08-29 15:51:32.945 +03:00 [Information] [] [Serilog.AspNetCore.RequestLoggingMiddleware] [] []: HTTP "GET" "/swagger/index.html" responded 200 in 0.6065 ms
+2025-08-29 15:51:33.072 +03:00 [Error] [] [TaskFlow.API.Middlewares.ErrorHandlingMiddleware] [] []: An unhandled error occurred during request processing for path "/openapi/v1.json"
+System.TypeLoadException: Could not load type 'Invalid_Token.0x02000069' from assembly 'TaskFlow.Core, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null'.
+   at System.Signature.GetSignature(Void* pCorSig, Int32 cCorSig, RuntimeFieldHandleInternal fieldHandle, IRuntimeMethodInfo methodHandle, RuntimeType declaringType)
+   at System.Reflection.RuntimeMethodInfo.<get_Signature>g__LazyCreateSignature|25_0()
+   at System.Reflection.RuntimeMethodInfo.GetParameters()
+   at Microsoft.Extensions.Internal.PropertyHelper.IsInterestingProperty(PropertyInfo property)
+   at Microsoft.Extensions.Internal.PropertyHelper.<GetProperties>g__AddInterestingProperties|39_0(List`1 propertyHelpers, Type type)
+   at Microsoft.Extensions.Internal.PropertyHelper.GetProperties(Type type, ConcurrentDictionary`2 cache)
+   at Microsoft.Extensions.Internal.PropertyHelper.GetVisibleProperties(Type type, ConcurrentDictionary`2 allPropertiesCache, ConcurrentDictionary`2 visiblePropertiesCache)
+   at Microsoft.AspNetCore.Mvc.ModelBinding.Metadata.DefaultModelMetadataProvider.CreatePropertyDetails(ModelMetadataIdentity key)
+   at Microsoft.AspNetCore.Mvc.ModelBinding.Metadata.DefaultModelMetadataProvider.GetMetadataForProperties(Type modelType)
+   at Microsoft.AspNetCore.Mvc.ModelBinding.Metadata.DefaultModelMetadata.get_Properties()
+   at Microsoft.AspNetCore.Mvc.ApiExplorer.DefaultApiDescriptionProvider.PseudoModelBindingVisitor.Visit(ApiParameterDescriptionContext bindingContext, BindingSource ambientSource, String containerName)
+   at Microsoft.AspNetCore.Mvc.ApiExplorer.DefaultApiDescriptionProvider.GetParameters(ApiParameterContext context)
+   at Microsoft.AspNetCore.Mvc.ApiExplorer.DefaultApiDescriptionProvider.CreateApiDescription(ControllerActionDescriptor action, String httpMethod, String groupName)
+   at Microsoft.AspNetCore.Mvc.ApiExplorer.DefaultApiDescriptionProvider.OnProvidersExecuting(ApiDescriptionProviderContext context)
+   at Microsoft.AspNetCore.Mvc.ApiExplorer.ApiDescriptionGroupCollectionProvider.GetCollection(ActionDescriptorCollection actionDescriptors)
+   at Microsoft.AspNetCore.Mvc.ApiExplorer.ApiDescriptionGroupCollectionProvider.get_ApiDescriptionGroups()
+   at Microsoft.AspNetCore.OpenApi.OpenApiDocumentService.GetOpenApiPathsAsync(HashSet`1 capturedTags, IServiceProvider scopedServiceProvider, IOpenApiOperationTransformer[] operationTransformers, IOpenApiSchemaTransformer[] schemaTransformers, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.OpenApi.OpenApiDocumentService.GetOpenApiDocumentAsync(IServiceProvider scopedServiceProvider, HttpRequest httpRequest, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Builder.OpenApiEndpointRouteBuilderExtensions.<>c__DisplayClass0_0.<<MapOpenApi>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Http.Generated.<GeneratedRouteBuilderExtensions_g>F56B68D2B55B5B7B373BA2E4796D897848BC0F04A969B1AF6260183E8B9E0BAF2__GeneratedRouteBuilderExtensionsCore.<>c__DisplayClass2_0.<<MapGet0>g__RequestHandler|5>d.MoveNext()
+--- End of stack trace from previous location ---
+   at TaskFlow.API.Middlewares.ErrorHandlingMiddleware.InvokeAsync(HttpContext context)
+2025-08-29 15:51:33.098 +03:00 [Error] [] [Serilog.AspNetCore.RequestLoggingMiddleware] [] []: HTTP "GET" "/openapi/v1.json" responded 500 in 31.2420 ms
+2025-08-29 15:51:37.389 +03:00 [Information] [] [Serilog.AspNetCore.RequestLoggingMiddleware] [] []: HTTP "GET" "/swagger/index.html" responded 200 in 0.2977 ms
+2025-08-29 15:51:37.472 +03:00 [Error] [] [TaskFlow.API.Middlewares.ErrorHandlingMiddleware] [] []: An unhandled error occurred during request processing for path "/openapi/v1.json"
+System.TypeLoadException: Could not load type 'Invalid_Token.0x02000069' from assembly 'TaskFlow.Core, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null'.
+   at System.Signature.GetSignature(Void* pCorSig, Int32 cCorSig, RuntimeFieldHandleInternal fieldHandle, IRuntimeMethodInfo methodHandle, RuntimeType declaringType)
+   at System.Reflection.RuntimeMethodInfo.<get_Signature>g__LazyCreateSignature|25_0()
+   at Microsoft.Extensions.Internal.PropertyHelper.IsInterestingProperty(Prope2025-08-29 16:11:35.761 +03:00 [Warning] [] [Microsoft.EntityFrameworkCore.Model.Validation] [] []: The foreign key property '"Developer"."UserId1"' was created in shadow state because a conflicting property with the simple name '"UserId"' exists in the entity type, but is either not mapped, is already used for another relationship, or is incompatible with the associated primary key type. See https://aka.ms/efcore-relationships for information on mapping relationships in EF Core.
+2025-08-29 16:11:35.887 +03:00 [Warning] [] [Microsoft.EntityFrameworkCore.Model.Validation] [] []: The foreign key property '"TaskEntity"."AssignedToUserId1"' was created in shadow state because a conflicting property with the simple name '"AssignedToUserId"' exists in the entity type, but is either not mapped, is already used for another relationship, or is incompatible with the associated primary key type. See https://aka.ms/efcore-relationships for information on mapping relationships in EF Core.
+2025-08-29 16:11:46.059 +03:00 [Warning] [] [LuckyPennySoftware.AutoMapper.License] [] []: You do not have a valid license key for the Lucky Penny software AutoMapper. This is allowed for development and testing scenarios. If you are running in production you are required to have a licensed version. Please visit https://luckypennysoftware.com to obtain a valid license.
+2025-08-29 16:11:46.121 +03:00 [Information] [] [TaskFlow.Business.Services.DeveloperService] [] []: Get developer with 2a499338-30e5-447a-2dea-08dde6fcce36
+2025-08-29 16:11:46.338 +03:00 [Information] [] [TaskFlow.Business.Services.DeveloperService] [] []: Developer with 2a499338-30e5-447a-2dea-08dde6fcce36 retrived successfully
+2025-08-29 16:11:46.372 +03:00 [Information] [] [Serilog.AspNetCore.RequestLoggingMiddleware] [] []: HTTP "GET" "/api/v1/Developers/2a499338-30e5-447a-2dea-08dde6fcce36" responded 200 in 367.5643 ms
+2025-08-29 16:11:48.116 +03:00 [Information] [] [TaskFlow.Business.Services.DeveloperService] [] []: Get developer with 2a499338-30e5-447a-2dea-08dde6fcce36
+2025-08-29 16:11:48.215 +03:00 [Information] [] [TaskFlow.Business.Services.DeveloperService] [] []: Developer with 2a499338-30e5-447a-2dea-08dde6fcce36 retrived successfully
+2025-08-29 16:11:48.216 +03:00 [Information] [] [Serilog.AspNetCore.RequestLoggingMiddleware] [] []: HTTP "GET" "/api/v1/Developers/2a499338-30e5-447a-2dea-08dde6fcce36" responded 200 in 116.8629 ms
+2025-08-29 16:11:56.154 +03:00 [Information] [] [TaskFlow.Business.Services.DeveloperService] [] []: Fetching developers page 1 with size 10
+2025-08-29 16:11:56.177 +03:00 [Warning] [] [Microsoft.EntityFrameworkCore.Query] [] []: The query uses a row limiting operator ('Skip'/'Take') without an 'OrderBy' operator. This may lead to unpredictable results. If the 'Distinct' operator is used after 'OrderBy', then make sure to use the 'OrderBy' operator after 'Distinct' as the ordering would otherwise get erased.
+2025-08-29 16:11:56.177 +03:00 [Warning] [] [Microsoft.EntityFrameworkCore.Query] [] []: The query uses a row limiting operator ('Skip'/'Take') without an 'OrderBy' operator. This may lead to unpredictable results. If the 'Distinct' operator is used after 'OrderBy', then make sure to use the 'OrderBy' operator after 'Distinct' as the ordering would otherwise get erased.
+2025-08-29 16:11:56.185 +03:00 [Information] [] [TaskFlow.Business.Services.DeveloperService] [] []: Developers retrived successfully
+2025-08-29 16:11:56.190 +03:00 [Information] [] [Serilog.AspNetCore.RequestLoggingMiddleware] [] []: HTTP "GET" "/api/v1/Developers" responded 200 in 59.7618 ms
+2025-08-29 16:12:03.271 +03:00 [Information] [] [TaskFlow.Business.Services.DeveloperService] [] []: Creating new developer: "AhmedKhatab360@gmail.com"
+2025-08-29 16:12:03.963 +03:00 [Warning] [] [TaskFlow.Business.Services.DeveloperService] [] []: developer is already exist
+2025-08-29 16:12:03.965 +03:00 [Error] [] [TaskFlow.API.Middlewares.ErrorHandlingMiddleware] [] []: An unhandled error occurred during request processing for path "/api/v1/Developers"
+TaskFlow.Sha

@@ -1,0 +1,101 @@
+2025-08-30 15:09:51.825 +03:00 [Warning] [] [Microsoft.EntityFrameworkCore.Model.Validation] [] []: The foreign key property '"Developer"."UserId1"' was created in shadow state because a conflicting property with the simple name '"UserId"' exists in the entity type, but is either not mapped, is already used for another relationship, or is incompatible with the associated primary key type. See https://aka.ms/efcore-relationships for information on mapping relationships in EF Core.
+2025-08-30 15:10:09.495 +03:00 [Information] [] [Serilog.AspNetCore.RequestLoggingMiddleware] [] []: HTTP "GET" "/swagger/index.html" responded 200 in 73.2466 ms
+2025-08-30 15:10:12.130 +03:00 [Information] [] [Serilog.AspNetCore.RequestLoggingMiddleware] [] []: HTTP "GET" "/openapi/v1.json" responded 200 in 524.0633 ms
+2025-08-30 15:10:20.546 +03:00 [Information] [] [Serilog.AspNetCore.RequestLoggingMiddleware] [] []: HTTP "POST" "/api/v1/Authentication/login" responded 200 in 1471.8844 ms
+2025-08-30 15:11:22.823 +03:00 [Warning] [] [TaskFlow.Business.Services.AuthenticationService] [] []: Invalid login attempt with provided credentials.
+2025-08-30 15:11:22.827 +03:00 [Error] [] [TaskFlow.API.Middlewares.ErrorHandlingMiddleware] [] []: An unhandled error occurred during request processing for path "/api/v1/Authentication/login"
+TaskFlow.Shared.Exceptions.BadRequestException: Invalid email or password
+   at TaskFlow.Business.Services.AuthenticationService.HandleInvalidLogin() in C:\Users\DELL\Desktop\LinkedinProject\TaskFlow\TaskFlow.Business\Services\AuthenticationService.cs:line 73
+   at TaskFlow.Business.Services.AuthenticationService.LoginAsync(LoginRequest request) in C:\Users\DELL\Desktop\LinkedinProject\TaskFlow\TaskFlow.Business\Services\AuthenticationService.cs:line 37
+   at TaskFlow.API.Controllers.AuthenticationController.LoginAsync(LoginRequest request) in C:\Users\DELL\Desktop\LinkedinProject\TaskFlow\TaskFlow.API\Controllers\AuthenticationController.cs:line 38
+   at lambda_method25(Closure, Object)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.AwaitableObjectResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Logged|12_1(ControllerActionInvoker invoker)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.InvokeInnerFilterAsync()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+   at TaskFlow.API.Middlewares.ErrorHandlingMiddleware.InvokeAsync(HttpContext context) in C:\Users\DELL\Desktop\LinkedinProject\TaskFlow\TaskFlow.API\Middlewares\ErrorHandlingMiddleware.cs:line 25
+2025-08-30 15:11:22.860 +03:00 [Error] [] [Serilog.AspNetCore.RequestLoggingMiddleware] [] []: HTTP "POST" "/api/v1/Authentication/login" responded 500 in 91.4053 ms
+2025-08-30 15:11:31.965 +03:00 [Warning] [] [TaskFlow.Business.Services.AuthenticationService] [] []: Invalid login attempt with provided credentials.
+2025-08-30 15:11:31.966 +03:00 [Error] [] [TaskFlow.API.Middlewares.ErrorHandlingMiddleware] [] []2025-08-30 15:48:05.283 +03:00 [Warning] [] [Microsoft.EntityFrameworkCore.Model.Validation] [] []: The foreign key property '"Developer"."UserId1"' was created in shadow state because a conflicting property with the simple name '"UserId"' exists in the entity type, but is either not mapped, is already used for another relationship, or is incompatible with the associated primary key type. See https://aka.ms/efcore-relationships for information on mapping relationships in EF Core.
+2025-08-30 15:48:28.976 +03:00 [Warning] [] [LuckyPennySoftware.AutoMapper.License] [] []: You do not have a valid license key for the Lucky Penny software AutoMapper. This is allowed for development and testing scenarios. If you are running in production you are required to have a licensed version. Please visit https://luckypennysoftware.com to obtain a valid license.
+2025-08-30 15:48:29.041 +03:00 [Information] [] [TaskFlow.Business.Services.DeveloperService] [] []: Fetching developers page 1 with size 10
+2025-08-30 15:48:29.136 +03:00 [Warning] [] [Microsoft.EntityFrameworkCore.Query] [] []: The query uses a row limiting operator ('Skip'/'Take') without an 'OrderBy' operator. This may lead to unpredictable results. If the 'Distinct' operator is used after 'OrderBy', then make sure to use the 'OrderBy' operator after 'Distinct' as the ordering would otherwise get erased.
+2025-08-30 15:48:29.137 +03:00 [Warning] [] [Microsoft.EntityFrameworkCore.Query] [] []: The query uses a row limiting operator ('Skip'/'Take') without an 'OrderBy' operator. This may lead to unpredictable results. If the 'Distinct' operator is used after 'OrderBy', then make sure to use the 'OrderBy' operator after 'Distinct' as the ordering would otherwise get erased.
+2025-08-30 15:48:29.219 +03:00 [Information] [] [TaskFlow.Business.Services.DeveloperService] [] []: Developers retrived successfully
+2025-08-30 15:48:29.305 +03:00 [Information] [] [Serilog.AspNetCore.RequestLoggingMiddleware] [] []: HTTP "GET" "/api/v1/Developers" responded 200 in 510.3651 ms
+2025-08-30 15:50:33.739 +03:00 [Information] [] [TaskFlow.Business.Services.TaskService] [] []: Attempting to assign task to developer 2a499338-30e5-447a-2dea-08dde6fcce36
+2025-08-30 15:50:33.762 +03:00 [Warning] [] [TaskFlow.Business.Services.TaskService] [] []: Invalid data 09/01/2025 12:48:46 +00:00, "Generate UML diagrams (Use Case, Class, and Sequence) for the TaskFlow system to document system architecture and interactions." and 2a499338-30e5-447a-2dea-08dde6fcce36
+2025-08-30 15:50:33.764 +03:00 [Error] [] [TaskFlow.API.Middlewares.ErrorHandlingMiddleware] [] []: An unhandled error occurred during request processing for path "/api/v1/Tasks"
+TaskFlow.Shared.Exceptions.BadRequestException: Invalid data
+   at TaskFlow.Business.Services.TaskService.AssignTaskEntity(CreateTaskEntity entity, CancellationToken cancellation) in C:\Users\DELL\Desktop\LinkedinProject\TaskFlow\TaskFlow.Business\Services\TaskService.cs:line 38
+   at TaskFlow.API.Controllers.TasksController.AssignTaskEntity(CreateTaskEntity entity, CancellationToken cancellation) in C:\Users\DELL\Desktop\LinkedinProject\TaskFlow\TaskFlow.API\Controllers\TasksController.cs:line 43
+   at lambda_method57(Closure, Object)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.AwaitableObjectResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Logged|12_1(ControllerActionInvoker invoker)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean2025-08-30 15:54:20.921 +03:00 [Warning] [] [Microsoft.EntityFrameworkCore.Model.Validation] [] []: The foreign key property '"Developer"."UserId1"' was created in shadow state because a conflicting property with the simple name '"UserId"' exists in the entity type, but is either not mapped, is already used for another relationship, or is incompatible with the associated primary key type. See https://aka.ms/efcore-relationships for information on mapping relationships in EF Core.
+2025-08-30 15:55:08.062 +03:00 [Information] [] [TaskFlow.Business.Services.TaskService] [] []: Attempting to assign task to developer 2a499338-30e5-447a-2dea-08dde6fcce36
+2025-08-30 15:56:17.446 +03:00 [Warning] [] [TaskFlow.Business.Services.TaskService] [] []: Invalid data 09/01/2025 18:00:00 +00:00, "Generate UML diagrams (Use Case, Class, and Sequence) for the TaskFlow system to document system architecture and user interactions." and 2a499338-30e5-447a-2dea-08dde6fcce36
+2025-08-30 15:56:18.328 +03:00 [Error] [] [TaskFlow.API.Middlewares.ErrorHandlingMiddleware] [] []: An unhandled error occurred during request processing for path "/api/v1/Tasks"
+TaskFlow.Shared.Exceptions.BadRequestException: Invalid data
+   at TaskFlow.Business.Services.TaskService.AssignTaskEntity(CreateTaskEntity entity, CancellationToken cancellation) in C:\Users\DELL\Desktop\LinkedinProject\TaskFlow\TaskFlow.Business\Services\TaskService.cs:line 38
+   at TaskFlow.API.Controllers.TasksController.AssignTaskEntity(CreateTaskEntity entity, CancellationToken cancellation) in C:\Users\DELL\Desktop\LinkedinProject\TaskFlow\TaskFlow.API\Controllers\TasksController.cs:line 43
+   at lambda_method22(Closure, Object)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.AwaitableObjectResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Logged|12_1(ControllerActionInvoker invoker)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.InvokeInnerFilterAsync()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+   at TaskFlow.API.Middlewares.ErrorHandlingMiddleware.InvokeAsync(HttpContext context) in C:\Users\DELL\Desktop\LinkedinProject\TaskFlow\TaskFlow.API\Middlewares\ErrorHandlingMiddleware.cs:line 25
+2025-08-30 15:56:18.438 +03:00 [Error] [] [Serilog.AspNetCore.RequestLoggingMiddleware] [] []: HTTP "POST" "/api/v1/Tasks" responded 500 in 109502.2817 ms
+2025-08-30 15:56:39.823 +03:00 [Information] [] [TaskFlow.Business.Services.TaskService] [] []: Attempting to assign task to developer 2a499338-30e5-447a-2dea-08dde6fcce36
+2025-08-30 15:57:22.517 +03:00 [Information] [] [TaskFlow.Business.Services.TaskService] [] []: Task created and assigned successfully
+2025-08-30 15:57:27.861 +03:00 [Information] [] [Serilog.AspNetCore.RequestLoggingMiddleware] [] []: HTTP "POST" "/api/v1/Tasks" responded 200 in 53359.8330 ms
+2025-08-30 15:57:54.110 +03:00 [Information] [] [TaskFlow.Business.Services.TaskService] [] []: Attempting to get task by 2fca01d3-6b1e-4363-4a6f-08dde7c4b605
+2025-08-30 15:57:54.359 +03:00 [Information] [] [Serilog.AspNetCore.RequestLoggingMiddleware] [] []: HTTP "GET" "/api/v1/Tasks/2fca01d3-6b1e-4363-4a6f-08dde7c4b605" responded 200 in 265.5159 ms
+2025-08-30 15:58:18.053 +03:00 [Error] [] [Serilog.AspNetCore.RequestLoggingMiddleware] [] []: HTTP "GET" "/api/v1/Tasks" responded 500 in 147.6282 ms
+System.InvalidOperationException: The AuthorizationPolicy named: 'Developer' was not found.
+   at Microsoft.AspNetCore.Authorization.AuthorizationPolicy.CombineAsync(IAuthorizationPolicyProvider policyProvider, IEnumerable`1 authorizeData, IEnumerable`1 policies)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+2025-08-30 15:58:18.138 +03:00 [Error] [] [Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddleware] [] []: An unhandled exception has occurred while executing the request.
+System.InvalidOperationException: The AuthorizationPolicy named: 'Developer' was not found.
+   at Microsoft.AspNetCore.Authorization.AuthorizationPolicy.CombineAsync(IAuthorizationPolicyProvider policyProvider, IEnumerable`1 authorizeData, IEnumerable`1 policies)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+   at Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddlewareImpl.Invoke(HttpContext context)
+2025-08-30 15:58:53.289 +03:00 [Error] [] [Serilog.AspNetCore.RequestLoggingMiddleware] [] []: HTTP "GET" "/api/v1/Tasks" responded 500 in 98.2645 ms
+System.InvalidOperationException: The AuthorizationPolicy named: 'Developer' was not found.
+   at Microsoft.AspNetCore.Authorization.AuthorizationPolicy.CombineAsync(IAuthorizationPolicyProvider policyProvider, IEnumerable`1 authorizeData, IEnumerable`1 policies)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+2025-08-30 15:58:53.318 +03:00 [Error] [] [Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddleware] [] []: An unhandled exception has occurred while executing the request.
+System.InvalidOperationException: The AuthorizationPolicy named: 'Developer' was not found.
+   at Microsoft.AspNetCore.Authorization.AuthorizationPolicy.CombineAsync(IAuthorizationPolicyProvider policyProvider, IEnumerable`1 authorizeData, IEnumerable`1 policies)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+   at Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddlewareImpl.Invoke(HttpContext context)
+2025-08-30 16:00:20.449 +03:00 [Error] [] [Serilog.AspNetCore.RequestLoggingMiddleware] [] []: HTTP "GET" "/api/v1/Tasks" responded 500 in 90.0889 ms
+System.InvalidOperationException: The AuthorizationPolicy named: 'Developer' was not found.
+   at Microsoft.AspNetCore.Authorization.AuthorizationPolicy.CombineAsync(IAuthorizationPolicyProvider policyProvider, IEnumerable`1 authorizeData, IEnumerable`1 policies)
+   at Microsoft.AspNetCore.Authorization.Authorizat

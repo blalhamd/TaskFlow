@@ -1,0 +1,101 @@
+2025-09-03 23:33:33.632 +03:00 [Error] [] [Microsoft.EntityFrameworkCore.Database.Command] [] []: Failed executing DbCommand ("343"ms) [Parameters=["@p0='?' (DbType = Guid), @p1='?' (DbType = Int32), @p2='?' (DbType = DateTimeOffset), @p3='?' (DbType = Guid), @p4='?' (DbType = DateTimeOffset), @p5='?' (DbType = Guid), @p6='?' (Size = 50), @p7='?' (Size = 256), @p8='?' (DbType = Boolean), @p9='?' (Size = 4000), @p10='?' (Size = 50), @p11='?' (DbType = DateTimeOffset), @p12='?' (DbType = Guid), @p13='?' (DbType = Guid), @p14='?' (DbType = Int32), @p15='?' (DbType = Guid), @p16='?' (DbType = Guid), @p17='?' (Size = 1000), @p18='?' (DbType = DateTimeOffset), @p19='?' (DbType = Guid), @p20='?' (DbType = DateTimeOffset), @p21='?' (DbType = Guid), @p22='?' (DbType = DateTimeOffset), @p23='?' (DbType = Boolean), @p24='?' (DbType = Boolean), @p25='?' (DbType = DateTimeOffset), @p26='?' (DbType = Guid), @p27='?' (Size = 4000), @p28='?' (DbType = DateTimeOffset), @p29='?' (DbType = Guid), @p30='?' (DbType = Guid), @p31='?' (Size = 1000), @p32='?' (DbType = DateTimeOffset), @p33='?' (DbType = Guid), @p34='?' (DbType = DateTimeOffset), @p35='?' (DbType = Guid), @p36='?' (DbType = DateTimeOffset), @p37='?' (DbType = Boolean), @p38='?' (DbType = Boolean), @p39='?' (DbType = DateTimeOffset), @p40='?' (DbType = Guid), @p41='?' (Size = 4000), @p42='?' (DbType = DateTimeOffset), @p43='?' (DbType = Guid), @p44='?' (DbType = Int32), @p45='?' (Size = 4000), @p46='?' (DbType = DateTimeOffset), @p47='?' (DbType = Guid), @p48='?' (DbType = DateTimeOffset), @p49='?' (DbType = Guid), @p50='?' (Size = 256), @p51='?' (DbType = Boolean), @p52='?' (DbType = Boolean), @p53='?' (DbType = Boolean), @p54='?' (DbType = DateTimeOffset), @p55='?' (DbType = DateTimeOffset), @p56='?' (DbType = Guid), @p57='?' (Size = 256), @p58='?' (Size = 256), @p59='?' (Size = 4000), @p60='?' (Size = 4000), @p61='?' (DbType = Boolean), @p62='?' (Size = 4000), @p63='?' (DbType = Boolean), @p64='?' (Size = 256)"], CommandType='Text', CommandTimeout='30']"
+""SET NOCOUNT ON;
+INSERT INTO [Developers] ([Id], [Age], [CreatedAt], [CreatedByUserId], [DeletedAt], [DeletedByUserId], [FullName], [ImagePath], [IsDeleted], [JobLevel], [JobTitle], [ModifiedAt], [ModifiedByUserId], [UserId], [YearOfExperience])
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12, @p13, @p14);
+INSERT INTO [Tasks] ([Id], [AssignedToDeveloperId], [Content], [CreatedAt], [CreatedByUserId], [DeletedAt], [DeletedByUserId], [EndAt], [IsDeleted], [IsFinished], [ModifiedAt], [ModifiedByUserId], [Progress], [StartAt])
+VALUES (@p15, @p16, @p17, @p18, @p19, @p20, @p21, @p22, @p23, @p24, @p25, @p26, @p27, @p28),
+(@p29, @p30, @p31, @p32, @p33, @p34, @p35, @p36, @p37, @p38, @p39, @p40, @p41, @p42);
+INSERT INTO [Security].[Users] ([Id], [AccessFailedCount], [ConcurrencyStamp], [CreatedAt], [CreatedByUserId], [DeletedAt], [DeletedByUserId], [Email], [EmailConfirmed], [IsDeleted], [LockoutEnabled], [LockoutEnd], [ModifiedAt], [ModifiedByUserId], [NormalizedEmail], [NormalizedUserName], [PasswordHash], [PhoneNumber], [PhoneNumberConfirmed], [SecurityStamp], [TwoFactorEnabled], [UserName])
+VALUES (@p43, @p44, @p45, @p46, @p47, @p48, @p49, @p50, @p51, @p52, @p53, @p54, @p55, @p56, @p57, @p58, @p59, @p60, @p61, @p62, @p63, @p64);"
+2025-09-03 23:33:34.242 +03:00 [Error] [] [Microsoft.EntityFrameworkCore.Update] [] []: An exception occurred in the database while saving changes for context type '"TaskFlow.Infrastructure.Data.context.AppDbContext"'."
+""Microsoft.EntityFrameworkCore.DbUpdateException: An error occurred while saving the entity changes. See the inner exception for details.
+ ---> Microsoft.Data.SqlClient.SqlException (0x80131904): The INSERT statement conflicted with the FOREIGN KEY constraint \"FK_Tasks_Developers_AssignedToDeveloperId\". The conflict occurred in database \"TaskFlowAPI\", table \"dbo.Developers\", column 'Id'.
+The statement has been terminated.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__211_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+ClientConnectionId:4005b053-0132-4a90-be76-1bef01182081
+Error Number:547,State:0,Class:16
+   --- End of inner exception stack trace ---
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Update.Internal.SqlServerModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalDatabase.SaveChangesAsync(IList`1 entries, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)"
+Microsoft.EntityFrameworkCore.DbUpdateException: An error occurred while saving the entity changes. See the inner exception for details.
+ ---> Microsoft.Data.SqlClient.SqlException (0x80131904): The INSERT statement conflicted with the FOREIGN KEY constraint "FK_Tasks_Developers_AssignedToDeveloperId". The conflict occurred in database "TaskFlowAPI", table "dbo.Developers", column 'Id'.
+The statement has been terminated.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__211_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+ClientConnectionId:4005b053-0132-4a90-be76-1bef01182081
+Error Number:547,State:0,Class:16
+   --- End of inner exception stack trace ---
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Update.Internal.SqlServerModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalDatabase.SaveChangesAsync(IList`1 entries, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+2025-09-03 23:33:35.211 +03:00 [Error] [] [Program] [] []: An error occurred during database seeding.
+Microsoft.EntityFrameworkCore.DbUpdateException: An error occurred while saving the entity changes. See the inner exception for details.
+ ---> Microsoft.Data.SqlClient.SqlException (0x80131904): The INSERT statement conflicted with the FOREIGN KEY constraint "FK_Tasks_Developers_AssignedToDeveloperId". The conflict occurred in database "TaskFlowAPI", table "dbo.Developers", column 'Id'.
+The statement has been terminated.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__211_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+ClientConnectionId:4005b053-0132-4a90-be76-1bef01182081
+Error Number:547,State:0,Class:16
+   --- End of inner exception stack trace ---
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalCo2025-09-03 23:38:28.372 +03:00 [Information] [] [Serilog.AspNetCore.RequestLoggingMiddleware] [] []: HTTP "POST" "/api/v1/Authentication/login" responded 200 in 541.8124 ms
+2025-09-03 23:38:53.757 +03:00 [Warning] [] [LuckyPennySoftware.AutoMapper.License] [] []: You do not have a valid license key for the Lucky Penny software AutoMapper. This is allowed for development and testing scenarios. If you are running in production you are required to have a licensed version. Please visit https://luckypennysoftware.com to obtain a valid license.
+2025-09-03 23:38:53.777 +03:00 [Information] [] [TaskFlow.Business.Services.DeveloperService] [] []: Fetching developers page 1 with size 10
+2025-09-03 23:38:53.865 +03:00 [Warning] [] [Microsoft.EntityFrameworkCore.Query] [] []: The query uses a row limiting operator ('Skip'/'Take') without an 'OrderBy' operator. This may lead to unpredictable results. If the 'Distinct' operator is used after 'OrderBy', then make sure to use the 'OrderBy' operator after 'Distinct' as the ordering would otherwise get erased.
+2025-09-03 23:38:53.866 +03:00 [Warning] [] [Microsoft.EntityFrameworkCore.Query] [] []: The query uses a row limiting operator ('Skip'/'Take') without an 'OrderBy' operator. This may lead to unpredictable results. If the 'Distinct' operator is used after 'OrderBy', then make sure to use the 'OrderBy' operator after 'Distinct' as the ordering would otherwise get erased.
+2025-09-03 23:38:53.900 +03:00 [Information] [] [Serilog.AspNetCore.RequestLoggingMiddleware] [] []: HTTP "GET" "/api/v1/Developers" responded 200 in 197.1009 ms
+2025-09-03 23:39:21.614 +03:00 [Information] [] [Serilog.AspNetCore.RequestLoggingMiddleware] [] []: HTTP "POST" "/api/v1/Developers" responded 401 in 6.2649 ms
+2025-09-03 23:39:41.684 +03:00 [Information] [] [TaskFlow.Business.Services.DeveloperService] [] []: Creating new developer: "AliHamed360@gmail.com"
+2025-09-03 23:39:41.901 +03:00 [Information] [] [TaskFlow.Business.Services.DeveloperService] [] []: image created successfully on server
+2025-09-03 23:39:42.063 +03:00 [Information] [] [TaskFlow.Business.Services.DeveloperService] [] []: created user is successfully and had developer role too.
+2025-09-03 23:39:42.064 +03:00 [Information] [] [Serilog.AspNetCore.RequestLoggingMiddleware] [] []: HTTP "POST" "/api/v1/Developers" responded 200 in 407.3615 ms
+2025-09-03 23:40:48.697 +03:00 [Information] [] [TaskFlow.Business.Services.DeveloperService] [] []: Creating new developer: "AhmedKhatab360@gmail.com"
+2025-09-03 23:40:49.037 +03:00 [Information] [] [TaskFlow.Business.Services.DeveloperService] [] []: image created successfully on server
+2025-09-03 23:40:49.389 +03:00 [Information] [] [TaskFlow.Business.Services.DeveloperService] [] []: created user is successfully and had developer role too.
+2025-09-03 23:40:49.390 +03:00 [Information] [] [Serilog.AspNetCore.RequestLoggingMiddleware] [] []: HTTP "POST" "/api/v1/Developers" responded 200 in 768.1929 ms
+2025-09-03 23:41:14.465 +03:00 [Information] [] [TaskFlow.Business.Services.DeveloperService] [] []: Fetching developers page 1 with size 10
+2025-09-03 23:41:14.478 +03:00 [Information] [] [TaskFlow.Business.Services.DeveloperService] [] []: Developers retrived successfully
+2025-09-03 23:41:14.481 +03:00 [Information] [] [Serilog.AspNetCore.RequestLoggingMiddleware] [] []: HTTP "GET" "/api/v1/Developers" responded 200 in 16.8839 ms
+2025-09-03 23:41:31.482 +03:00 [Information] [] [TaskFlow.Business.Services.DeveloperService] [] []: Get developer with 3b1047cc-3e01-4292-e3ee-08ddeb2a0278
+2025-09-03 23:41:31.596 +03:00 [Information] [] [TaskFlow.Business.Services.DeveloperService] [] []: Developer with 3b1047cc-3e01-4292-e3ee-08ddeb2a0278 retrived successfully
+2025-09-03 23:41:31.607 +03:00 [Information] [] [Serilog.AspNetCore.RequestLoggingMiddleware] [] []: HTTP "GET" "/api/v1/Developers/3b1047cc-3e01-4292-e3ee-08ddeb2a0278" responded 200 in 128.9413 ms
+2025-09-03 23:42:18.272 +03:00 [Information] [] [TaskFlow.Business.Services.DeveloperService] [] []: Fetching developers page 1 with s
