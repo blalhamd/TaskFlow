@@ -107,5 +107,4 @@ namespace TaskFlow.Domain.Entities
             AssignedTasks.Remove(task);
         }
     }
-
 }

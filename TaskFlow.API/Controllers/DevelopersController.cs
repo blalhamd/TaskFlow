@@ -93,7 +93,7 @@ namespace TaskFlow.API.Controllers
         [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateDeveloper(
-            UpdateDeveloperRequest request,
+            [FromForm] UpdateDeveloperRequest request,
             CancellationToken cancellationToken = default)
         {
             var result = await _developerService.UpdateDeveloper(request, cancellationToken);

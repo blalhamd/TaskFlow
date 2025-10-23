@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using FluentValidation;
+﻿using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -53,7 +52,7 @@ namespace TaskFlow.Business.Services
                 Id = developer.Id,
                 Age = developer.Age,
                 FullName = developer.FullName,
-                ImagePath = string.IsNullOrEmpty(developer.ImagePath) ? _baseUrl : $"{_baseUrl}/{developer.ImagePath}",
+                ImagePath = string.IsNullOrEmpty(developer.ImagePath) ? _baseUrl : $"{_baseUrl}{developer.ImagePath}",
                 JobLevel = developer.JobLevel,
                 JobTitle = developer.JobTitle,
                 UserId = developer.UserId,
@@ -165,7 +164,7 @@ namespace TaskFlow.Business.Services
                 FullName = developer.FullName,
                 Age = developer.Age,
                 YearOfExperience = developer.YearOfExperience,
-                ImagePath = string.IsNullOrEmpty(developer.ImagePath) ? _baseUrl : $"{_baseUrl}/{developer.ImagePath}",
+                ImagePath = string.IsNullOrEmpty(developer.ImagePath) ? _baseUrl : $"{_baseUrl}{developer.ImagePath}",
                 JobLevel = developer.JobLevel,
                 JobTitle = developer.JobTitle,
                 UserId = developer.UserId,

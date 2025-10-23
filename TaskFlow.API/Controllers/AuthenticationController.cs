@@ -46,7 +46,7 @@ namespace TaskFlow.API.Controllers
         [HttpPost("forgot-password")]
         [MapToApiVersion("1.0")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<string>> ForgotPassword([FromBody] ForgotPasswordRequest request)
+        public async Task<ActionResult<string>> ForgotPasswordAsync([FromBody] ForgotPasswordRequest request)
            => Ok(await _authenticationService.GeneratePasswordResetTokenAsync(request.Email));
 
         /// <summary>
@@ -58,7 +58,43 @@ namespace TaskFlow.API.Controllers
         [MapToApiVersion("1.0")]
         [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<bool>> ResetPassword([FromBody] ResetPasswordRequest request)
+        public async Task<ActionResult<bool>> ResetPasswordAsync([FromBody] ResetPasswordRequest request)
            => Ok(await _authenticationService.ResetPasswordAsync(request));
+
+        /// <summary>
+        /// Generates a new JWT access token and a new refresh token using an existing, valid refresh token.
+        /// </summary>
+        /// <param name="request">The request body containing the expired JWT <see cref="RefreshTokenRequest.Token"/> and the current <see cref="RefreshTokenRequest.RefreshToken"/>.</param>
+        /// <returns>
+        /// A <see cref="Task{IActionResult}"/> containing the new JWT and Refresh Token pair if successful,
+        /// or a <see cref="StatusCodes.Status400BadRequest"/> if the tokens are invalid or expired.
+        /// </returns>
+        [HttpPost("refresh-token")]
+        [MapToApiVersion("1.0")]
+        [ProducesResponseType(typeof(IActionResult), StatusCodes.Status200OK)]
+        public async Task<IActionResult> RefreshAsync(RefreshTokenRequest request)
+        {
+            var result = await _authenticationService.GetRefreshTokenAsync(request.Token, request.RefreshToken);
+
+            return result is null ? BadRequest("Invalid token") : Ok(result);
+        }
+
+        /// <summary>
+        /// Revokes a specific refresh token, immediately invalidating it and preventing its future use.
+        /// </summary>
+        /// <param name="request">The request body containing the access token and the <see cref="RefreshTokenRequest.RefreshToken"/> to be revoked.</param>
+        /// <returns>
+        /// A <see cref="Task{IActionResult}"/> containing a boolean result wrapped in an <see cref="StatusCodes.Status200OK"/>
+        /// if the token was successfully revoked, or a <see cref="StatusCodes.Status400BadRequest"/> if the operation failed.
+        /// </returns>
+        [HttpPut("revoke-refresh-token")]
+        [MapToApiVersion("1.0")]
+        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+        public async Task<IActionResult> RevokeRefreshTokenAsync(RefreshTokenRequest request)
+        {
+            var result = await _authenticationService.RevokeRefreshTokenAsync(request.Token, request.RefreshToken);
+
+            return result is false? BadRequest("Failed operation") : Ok(result);
+        }
     }
 }

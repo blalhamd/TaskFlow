@@ -47,8 +47,39 @@ namespace TaskFlow.Business.Services
             return new JwtProviderResponse()
             {
                 Token = token,
-                ExpireIn = _jwtSetting.LifeTime
+                TokenExpiration = DateTimeOffset.UtcNow.AddMinutes(_jwtSetting.LifeTime),
             };
+        }
+
+        // to validate token that send with requests that ask new token by refresh token
+        public string? ValidateToken(string Token)
+        {
+            var handler = new JwtSecurityTokenHandler();
+            var SymmetricSecurityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSetting.Key));
+
+            try
+            {
+                handler.ValidateToken(Token, new TokenValidationParameters
+                {
+                    IssuerSigningKey = SymmetricSecurityKey,
+                    ValidateIssuerSigningKey = true,
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ClockSkew = TimeSpan.Zero,
+                    NameClaimType = "nameid"
+                },
+                out SecurityToken validatedToken);
+
+                var jwtToken = (JwtSecurityToken)validatedToken;
+
+                var userId = jwtToken.Claims.First(claim => claim.Type == "nameid").Value;
+
+                return userId;
+            }
+            catch
+            {
+                return null;
+            }
         }
     }
 }

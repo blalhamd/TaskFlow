@@ -13,5 +13,6 @@ namespace TaskFlow.Domain.Entities.Identity
         public DateTimeOffset? DeletedAt { get; set; }
         public bool IsDeleted { get; set; }
         public List<ApplicationRole> Roles { get; set; } = new();
+        public List<RefreshToken> RefreshTokens { get; set; } = new();
     }
 }

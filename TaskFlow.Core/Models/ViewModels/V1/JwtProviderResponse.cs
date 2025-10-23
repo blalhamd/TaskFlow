@@ -2,7 +2,7 @@
 {
     public class JwtProviderResponse
     {
-        public string Token { get; set; } = null!;
-        public int ExpireIn { get; set; }
+        public string Token { get; set; } = string.Empty;
+        public DateTimeOffset TokenExpiration { get; set; }
     }
 }

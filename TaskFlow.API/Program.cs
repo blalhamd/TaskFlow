@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Serilog;
 using System.Text.Json.Serialization;
 using TaskFlow.API.Extensions;
+using TaskFlow.API.Filters;
 using TaskFlow.API.Middlewares;
 using TaskFlow.DependencyInjection;
 using TaskFlow.Domain.Entities.Identity;
@@ -13,7 +14,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers().AddJsonOptions(options =>
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<RequestTimeCalculationFilter>();
+}).AddJsonOptions(options =>
 {
     // Serialize enums as strings instead of numbers
     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
@@ -33,6 +37,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.OptionsPatternConfig(builder.Configuration);
 builder.Services.RegisterJwtAuthenticationConfig(builder.Configuration);
 builder.Services.EnableCors(builder.Configuration);
+
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
@@ -80,7 +85,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+app.UseStaticFiles();
 app.UseCors(); // you don't need to give name of policy because you specified defaultPolicy in CorsPolicy extension method
 app.UseAuthentication();
 app.UseAuthorization();

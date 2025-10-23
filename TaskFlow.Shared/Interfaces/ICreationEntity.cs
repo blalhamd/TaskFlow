@@ -1,4 +1,6 @@
-﻿namespace TaskFlow.Shared.Interfaces
+﻿using System;
+
+namespace TaskFlow.Shared.Interfaces
 {
     public interface ICreationEntity
     {

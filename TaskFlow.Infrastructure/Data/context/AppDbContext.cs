@@ -16,7 +16,8 @@ namespace TaskFlow.Infrastructure.Data.context
         public DbSet<Developer> Developers { get; set; }
         public DbSet<TaskEntity> Tasks { get; set; }
 
-        public IHttpContextAccessor _httpContextAccessor { get; set; }
+        private readonly IHttpContextAccessor _httpContextAccessor;
+
         public AppDbContext(DbContextOptions<AppDbContext> options, IHttpContextAccessor contextAccessor) : base(options)
         {
             _httpContextAccessor = contextAccessor;
@@ -53,6 +54,18 @@ namespace TaskFlow.Infrastructure.Data.context
             // UserTokens
             builder.Entity<IdentityUserToken<Guid>>()
                 .ToTable("UserTokens", schema: "Security");
+
+
+            builder.Entity<ApplicationUser>()
+                .OwnsMany(x => x.RefreshTokens)
+                .ToTable("RefreshTokens")
+                .WithOwner()
+                .HasForeignKey("UserId");
+
+            builder.Entity<Developer>().HasQueryFilter(x => !x.IsDeleted);
+            builder.Entity<TaskEntity>().HasQueryFilter(x => !x.IsDeleted);
+            builder.Entity<ApplicationUser>().HasQueryFilter(x => !x.IsDeleted);
+            builder.Entity<ApplicationRole>().HasQueryFilter(x => !x.IsDeleted);
 
             builder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
         }
