@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 using TaskFlow.API.Extensions;
 using TaskFlow.API.Filters;
 using TaskFlow.API.Middlewares;
+using TaskFlow.Business.Helper.Socket;
 using TaskFlow.DependencyInjection;
 using TaskFlow.Domain.Entities.Identity;
 using TaskFlow.Infrastructure.Data.context;
@@ -37,6 +38,8 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.OptionsPatternConfig(builder.Configuration);
 builder.Services.RegisterJwtAuthenticationConfig(builder.Configuration);
 builder.Services.EnableCors(builder.Configuration);
+
+builder.Services.AddSignalR();
 
 builder.Services.AddAuthorization();
 
@@ -90,6 +93,9 @@ app.UseCors(); // you don't need to give name of policy because you specified de
 app.UseAuthentication();
 app.UseAuthorization();
 
+// signalR Hub paths
+app.MapHub<DeveloperHub>("/developerHub");
+app.MapHub<TaskHub>("/taskHub");
 app.MapControllers();
 
 app.UseMiddleware<ErrorHandlingMiddleware>();

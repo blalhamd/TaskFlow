@@ -1,5 +1,8 @@
 ﻿using FluentValidation;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using TaskFlow.Business.Helper.Socket;
 using TaskFlow.Core.IServices;
 using TaskFlow.Core.IUnit;
 using TaskFlow.Core.Models.Dtos.V1;
@@ -17,15 +20,23 @@ namespace TaskFlow.Business.Services
     public class TaskService : ITaskService
     {
         private readonly IUnitOfWorkAsync _unitOfWork;
+        private readonly IImageService _imageService;
         private readonly ILogger<TaskService> _logger;
         private readonly IValidator<CreateTaskEntity> _createTaskValidator;
         private readonly IValidator<UpdateTaskEntity> _updateTaskValidator;
-        public TaskService(IUnitOfWorkAsync unitOfWork, ILogger<TaskService> logger, IValidator<CreateTaskEntity> createTaskValidator, IValidator<UpdateTaskEntity> updateTaskValidator)
+        private readonly IConfiguration _configuration;
+        private readonly IHubContext<TaskHub> _hubContext;
+        private readonly string _baseUrl;
+        public TaskService(IUnitOfWorkAsync unitOfWork, IImageService imageService, ILogger<TaskService> logger, IValidator<CreateTaskEntity> createTaskValidator, IValidator<UpdateTaskEntity> updateTaskValidator, IConfiguration configuration, IHubContext<TaskHub> hubContext)
         {
             _unitOfWork = unitOfWork;
+            _imageService = imageService;
             _logger = logger;
             _createTaskValidator = createTaskValidator;
             _updateTaskValidator = updateTaskValidator;
+            _configuration = configuration;
+            _hubContext = hubContext;
+            _baseUrl = _configuration["BaseUrl"] ?? "default.pdf";
         }
 
         public async Task<TaskEntityViewModel> AssignTaskEntity(CreateTaskEntity entity, CancellationToken cancellation)
@@ -39,7 +50,13 @@ namespace TaskFlow.Business.Services
                 throw new BadRequestException("Invalid data");
             }
 
-            var taskEntity = new TaskEntity(entity.StartAt, entity.EndAt, entity.Content, TaskProgress.NotStarted);
+            string? documentPath = null;
+            if(entity.Document is not null)
+            {
+               documentPath = await _imageService.UploadImageOnServer(entity.Document, false, null!, cancellation);
+            }
+
+            var taskEntity = new TaskEntity(entity.StartAt, entity.EndAt, entity.Content, documentPath, TaskProgress.NotStarted);
             taskEntity.AssignToDeveloper(entity.AssignedToDeveloperId);
 
             await _unitOfWork.Repository<TaskEntity>().CreateAsync(taskEntity, cancellation);
@@ -47,7 +64,11 @@ namespace TaskFlow.Business.Services
 
             _logger.LogInformation("Task created and assigned successfully");
 
-            return MapToModel(taskEntity);
+            var taskVM = MapToModel(taskEntity);
+
+            await _hubContext.Clients.All.SendAsync("assigntask", taskVM, cancellation);
+
+            return taskVM; 
         }
 
         public async Task<bool> ChangeTaskStatus(Guid taskId, TaskProgress progress, CancellationToken cancellationToken)
@@ -94,6 +115,7 @@ namespace TaskFlow.Business.Services
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("Task with {TaskId} deleted successfully", taskId);
+            await _hubContext.Clients.All.SendAsync("deletetask", task, cancellationToken);
 
             return true;
         }
@@ -198,37 +220,117 @@ namespace TaskFlow.Business.Services
 
             task.SetStartAt(taskEntity.StartAt);
             task.SetEndAt(taskEntity.EndAt);
-            task.SetContent(taskEntity.Content);
             task.SetProgress(taskEntity.Progress);
             task.AssignToDeveloper(taskEntity.AssignedToDeveloperId);
+            if (!string.IsNullOrEmpty(taskEntity.Content))
+            {
+                task.SetContent(taskEntity.Content);
+            }
+
+            string? oldPath = task.Document;
+            string? newPath = null;
+
+            if(taskEntity.Document != null)
+            {
+                newPath = await _imageService.UploadImageOnServer(taskEntity.Document,false,oldPath!,cancellationToken);
+            }
+            if (!string.IsNullOrEmpty(newPath))
+            {
+                task.SetDocument(newPath);
+            }
 
             await _unitOfWork.Repository<TaskEntity>().UpdateAsync(task, cancellationToken);
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            var rowsAffected = await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            return new TaskEntityViewModel
+            if(rowsAffected < 0)
             {
-                Id = task.Id,
-                StartAt = taskEntity.StartAt,
-                EndAt = taskEntity.EndAt,
-                Content = taskEntity.Content,
-                IsFinished = task.IsFinished,
-                Progress = taskEntity.Progress,
-                AssignedToDeveloperId = taskEntity.AssignedToDeveloperId,
-            };
+                if (!string.IsNullOrEmpty(newPath))
+                {
+                    await _imageService.RemoveImage(newPath);
+                }
+            }
+
+            var taskVM = MapToTaskVM(task);
+
+            await _hubContext.Clients.All.SendAsync("updatetask", taskVM, cancellationToken);
+
+            return taskVM!;
         }
 
-        private static TaskEntityViewModel MapToModel(TaskEntity entity)
+        public async Task<bool> AddCommentToTask(Guid userId, Guid taskId, CreateCommentRequest request, CancellationToken cancellationToken)
+        {
+            var developer = await _unitOfWork.Repository<Developer>().FirstOrDefaultAsync(x => x.UserId == userId);
+
+            if (developer is null)
+                throw new ItemNotFoundException("user not found"); // 89353308930a
+
+            var task = await _unitOfWork.Repository<TaskEntity>().FirstOrDefaultAsync(x => x.Id == taskId);
+
+            if (task is null)
+                throw new ItemNotFoundException("task not found");
+
+            var comment = new Comment
+            {
+                Content = request.Content,
+                DeveloperId = developer.Id,
+                TaskEntityId = taskId,
+            };
+
+            task.Comments.Add(comment);
+
+            await _unitOfWork.Repository<TaskEntity>().UpdateAsync(task, cancellationToken);
+            return await _unitOfWork.SaveChangesAsync(cancellationToken) > 0;
+        }
+
+        public async Task<List<CommentViewModel>> GetCommentsForTask(Guid taskId)
+        {
+            var taskDto = await _unitOfWork.taskRepositoryAsync
+                             .FirstOrDefaultAsync(x => x.Id == taskId);
+
+            if (taskDto is null)
+                throw new ItemNotFoundException("task not found");
+
+            var commentsVm = taskDto.CommentDtos.Select(MapToCommentViewModel)
+                .ToList();
+
+            return commentsVm;
+        }
+
+        private TaskEntityViewModel? MapToTaskVM(TaskEntity task)
+            => new TaskEntityViewModel
+            {
+                Id = task.Id,
+                StartAt = task.StartAt,
+                EndAt = task.EndAt,
+                Content = task.Content,
+                Document = string.IsNullOrEmpty(task.Document) ? _baseUrl : $"{_baseUrl}{task.Document}",
+                IsFinished = task.IsFinished,
+                Progress = task.Progress,
+                AssignedToDeveloperId = task.AssignedToDeveloperId,
+            };
+
+        private TaskEntityViewModel MapToModel(TaskEntity entity)
         {
             return new TaskEntityViewModel
             {
                 Id = entity.Id,
                 AssignedToDeveloperId = entity.AssignedToDeveloperId,
-                Content = entity.Content,
+                Content = entity.Content?? string.Empty,
+                Document = string.IsNullOrEmpty(entity.Document) ? _baseUrl : $"{_baseUrl}{entity.Document}",
                 EndAt = entity.EndAt,
                 IsFinished = entity.IsFinished,
                 Progress = entity.Progress,
                 StartAt = entity.StartAt,
             };
         }
+
+
+        private CommentViewModel MapToCommentViewModel(CommentDto c) => new CommentViewModel
+        {
+            Id = c.Id,
+            Content = c.Content,
+            CreatedAt = c.CreatedAt,
+            FullName = c.FullName
+        };
     }
 }

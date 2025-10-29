@@ -7,7 +7,8 @@ namespace TaskFlow.Core.Models.ViewModels.V1
         public Guid Id { get; set; }
         public DateTimeOffset StartAt { get; set; }
         public DateTimeOffset EndAt { get; set; }
-        public string Content { get; set; } = string.Empty;
+        public string? Content { get; set; }
+        public string? Document { get; set; }
         public bool IsFinished { get; set; }
         public TaskProgress Progress { get; set; }
 

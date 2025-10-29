@@ -11,6 +11,7 @@ namespace TaskFlow.API.Extensions
                 options.AddDefaultPolicy(builder =>
                 builder.AllowAnyHeader()
                        .AllowAnyMethod()
+                       .AllowCredentials()
                        .WithOrigins(configuration.GetSection(ApplicationConstants.Origins).Get<string[]>()!));
             });
 

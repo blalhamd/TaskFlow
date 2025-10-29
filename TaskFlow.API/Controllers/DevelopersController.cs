@@ -33,7 +33,7 @@ namespace TaskFlow.API.Controllers
         /// <returns>A paginated list of developers.</returns>
         [HttpGet]
         [MapToApiVersion("1.0")]
-        [Authorize(Roles = ApplicationConstants.Admin)]
+        [Authorize(Roles = ApplicationConstants.Admin + "," + ApplicationConstants.Developer)]
         [ProducesResponseType(typeof(PagesResult<DeveloperViewModel>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status403Forbidden)]
@@ -49,7 +49,7 @@ namespace TaskFlow.API.Controllers
         /// <returns>The developer details.</returns>
         [HttpGet("{id:guid}")]
         [MapToApiVersion("1.0")]
-        [Authorize(Roles = ApplicationConstants.Admin)]
+        [Authorize(Roles = ApplicationConstants.Admin + "," + ApplicationConstants.Developer)]
         [ProducesResponseType(typeof(DeveloperViewViewModel), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status403Forbidden)]

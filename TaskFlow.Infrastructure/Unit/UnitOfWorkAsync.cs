@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore.Storage;
 using TaskFlow.Core.IRepositories.Generic;
+using TaskFlow.Core.IRepositories.Non_Generic;
 using TaskFlow.Core.IUnit;
 using TaskFlow.Domain.Entities.Base;
 using TaskFlow.Infrastructure.Data.context;
@@ -12,11 +13,13 @@ namespace TaskFlow.Infrastructure.Unit
         private readonly AppDbContext _context;
         private readonly Dictionary<Type, object> _repositories;
         private IDbContextTransaction? _transaction;
+        public ITaskRepositoryAsync taskRepositoryAsync { get; }
 
-        public UnitOfWorkAsync(AppDbContext context)
+        public UnitOfWorkAsync(AppDbContext context, ITaskRepositoryAsync taskRepositoryAsync)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
             _repositories = new Dictionary<Type, object>();
+            this.taskRepositoryAsync = taskRepositoryAsync;
         }
 
         public IGenericRepositoryAsync<T> Repository<T>() where T : BaseEntity

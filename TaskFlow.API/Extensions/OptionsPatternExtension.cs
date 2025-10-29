@@ -18,6 +18,16 @@ namespace TaskFlow.API.Extensions
                             .ValidateDataAnnotations()
                             .ValidateOnStart();
 
+            // Configure the EmailSetting options from the configuration
+
+            services.Configure<MailSettings>(configuration.GetSection(MailSettings.SectionName));
+
+            // Validate the configuration settings on start
+
+            services.AddOptions<MailSettings>(configuration[MailSettings.SectionName])
+                            .ValidateDataAnnotations()
+                            .ValidateOnStart();
+
             return services;
         }
     }

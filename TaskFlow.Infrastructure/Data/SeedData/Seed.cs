@@ -5,6 +5,7 @@ using TaskFlow.Domain.Enums;
 using TaskFlow.Infrastructure.Data.context;
 using Microsoft.EntityFrameworkCore;
 using TaskFlow.Shared.Common;
+using System.Reflection.Metadata;
 
 namespace TaskFlow.Infrastructure.Data.SeedData
 {
@@ -175,6 +176,7 @@ namespace TaskFlow.Infrastructure.Data.SeedData
                 startAt: now.AddDays(1),
                 endAt: now.AddDays(3),
                 content: "Draw UML for TaskFlow System",
+                null,
                 progress: TaskProgress.NotStarted
             )
             ,
@@ -183,6 +185,7 @@ namespace TaskFlow.Infrastructure.Data.SeedData
                 startAt: now.AddDays(2),
                 endAt: now.AddDays(4),
                 content: "Implement Repository Pattern",
+                null,
                 progress: TaskProgress.NotStarted
             )
         };

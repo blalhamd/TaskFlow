@@ -1,7 +1,7 @@
 ﻿namespace TaskFlow.Shared.Interfaces
 {
-    public interface IEntityIdentity
+    public interface IEntityIdentity<T>
     {
-        Guid Id { get; set; }
+        T Id { get; set; }
     }
 }

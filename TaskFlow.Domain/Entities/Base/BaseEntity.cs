@@ -2,7 +2,7 @@
 
 namespace TaskFlow.Domain.Entities.Base
 {
-    public abstract class BaseEntity : IEntityIdentity, IAuditableEntity
+    public abstract class BaseEntity : IEntityIdentity<Guid>, IAuditableEntity
     {
         public Guid Id { get; set; }
         public Guid? CreatedByUserId { get; set; }

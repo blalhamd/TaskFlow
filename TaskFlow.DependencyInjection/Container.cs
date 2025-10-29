@@ -1,17 +1,22 @@
 ﻿using FluentValidation;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TaskFlow.Business.Services;
+using TaskFlow.Business.Services.Email;
 using TaskFlow.Core.AutoMapper;
 using TaskFlow.Core.IRepositories.Generic;
+using TaskFlow.Core.IRepositories.Non_Generic;
 using TaskFlow.Core.IServices;
+using TaskFlow.Core.IServices.Email;
 using TaskFlow.Core.IUnit;
 using TaskFlow.Core.Models.Validators;
 using TaskFlow.Domain.Entities.Identity;
 using TaskFlow.Infrastructure.Data.context;
 using TaskFlow.Infrastructure.Repositories.Generic;
+using TaskFlow.Infrastructure.Repositories.Non_Generic;
 using TaskFlow.Infrastructure.Unit;
 
 namespace TaskFlow.DependencyInjection
@@ -69,6 +74,9 @@ namespace TaskFlow.DependencyInjection
             services.AddScoped<IJwtProvider, JwtProvider>();
             services.AddScoped<ITaskService, TaskService>();
             services.AddScoped<IAccountService, AccountService>();
+            services.AddScoped<IEmailSender, EmailSender>();
+            services.AddScoped<IEmailBodyBuilder, EmailBodyBuilder>();
+            services.AddScoped<IImageService, ImageService>();
            
             return services;
         }
@@ -76,6 +84,7 @@ namespace TaskFlow.DependencyInjection
         private static IServiceCollection RegisterRepositories(this IServiceCollection services)
         {
             services.AddScoped(typeof(IGenericRepositoryAsync<>), typeof(GenericRepositoryAsync<>));
+            services.AddScoped(typeof(ITaskRepositoryAsync), typeof(TaskRepositoryAsync));
 
             return services;
         }

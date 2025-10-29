@@ -1,6 +1,7 @@
 ﻿using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Runtime.InteropServices;
 using TaskFlow.API.Extensions;
 using TaskFlow.API.Models;
 using TaskFlow.Core.IServices;
@@ -38,7 +39,7 @@ namespace TaskFlow.API.Controllers
         [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status403Forbidden)]
         [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<TaskEntityViewModel>> AssignTaskEntity([FromBody] CreateTaskEntity entity, CancellationToken cancellation = default)
+        public async Task<ActionResult<TaskEntityViewModel>> AssignTaskEntity([FromForm] CreateTaskEntity entity, CancellationToken cancellation = default)
         {
             var result = await _taskService.AssignTaskEntity(entity, cancellation);
             return Ok(result);
@@ -52,6 +53,7 @@ namespace TaskFlow.API.Controllers
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>Status change result.</returns>
         [HttpPatch("{taskId:guid}/status")]
+        [MapToApiVersion("1.0")]
         [Authorize(Roles = $"{ApplicationConstants.Admin},{ApplicationConstants.Developer}")]
         [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status404NotFound)]
@@ -68,6 +70,7 @@ namespace TaskFlow.API.Controllers
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>Delete operation result.</returns>
         [HttpDelete("{taskId:guid}")]
+        [MapToApiVersion("1.0")]
         [Authorize(Roles = ApplicationConstants.Admin)]
         [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status404NotFound)]
@@ -83,6 +86,7 @@ namespace TaskFlow.API.Controllers
         /// <param name="taskId">Task identifier.</param>
         /// <returns>Task entity view model.</returns>
         [HttpGet("{taskId:guid}")]
+        [MapToApiVersion("1.0")]
         [Authorize(Roles = $"{ApplicationConstants.Admin},{ApplicationConstants.Developer}")]
         [ProducesResponseType(typeof(TaskEntityViewModel), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status404NotFound)]
@@ -99,6 +103,7 @@ namespace TaskFlow.API.Controllers
         /// <param name="pageSize">Page size.</param>
         /// <returns>Paged result of tasks.</returns>
         [HttpGet("developer")]
+        [MapToApiVersion("1.0")]
         [Authorize(Roles = ApplicationConstants.Developer)]
         [ProducesResponseType(typeof(PagesResult<TaskEntityViewModel>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -120,6 +125,7 @@ namespace TaskFlow.API.Controllers
         /// <param name="pageSize">Page size.</param>
         /// <returns>Paged result of tasks.</returns>
         [HttpGet("admin")]
+        [MapToApiVersion("1.0")]
         [Authorize(Roles = ApplicationConstants.Admin)]
         [ProducesResponseType(typeof(PagesResult<TaskEntityViewModel>), StatusCodes.Status200OK)]
         public async Task<ActionResult<PagesResult<TaskEntityViewModel>>> GetAdminTasks([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
@@ -136,6 +142,7 @@ namespace TaskFlow.API.Controllers
         /// <param name="pageSize">Page size (max 10).</param>
         /// <returns>Paged result of tasks with specified status.</returns>
         [HttpGet("by-status")]
+        [MapToApiVersion("1.0")]
         [Authorize(Roles = ApplicationConstants.Admin + "," + ApplicationConstants.Manager)]
         [ProducesResponseType(typeof(PagesResult<TaskEntityViewModel>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status400BadRequest)]
@@ -155,16 +162,45 @@ namespace TaskFlow.API.Controllers
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>The updated task entity view model.</returns>
         [HttpPut]
+        [MapToApiVersion("1.0")]
         [Authorize(Roles = ApplicationConstants.Admin + "," + ApplicationConstants.Manager)]
         [ProducesResponseType(typeof(TaskEntityViewModel), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status404NotFound)]
         public async Task<ActionResult<TaskEntityViewModel>> UpdateTaskDetails(
-            UpdateTaskEntity request,
+            [FromForm] UpdateTaskEntity request,
             CancellationToken cancellationToken = default)
         {
             var result = await _taskService.UpdateTaskDetails(request, cancellationToken);
             return Ok(result);
         }
+
+        [HttpPost("{taskId}/comment")]
+        [MapToApiVersion("1.0")]
+        [Authorize(Roles = ApplicationConstants.Admin + "," + ApplicationConstants.Developer)]
+        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> AddCommentToTask(Guid taskId, CreateCommentRequest request, CancellationToken cancellationToken = default)
+        {
+            var userId = User.GetUserId();
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized("User is not authenticated");
+
+            return Ok(await _taskService.AddCommentToTask(Guid.Parse(userId), taskId, request, cancellationToken));
+        }
+
+        [HttpGet("{taskId}/comments")]
+        [MapToApiVersion("1.0")]
+        [Authorize(Roles = ApplicationConstants.Admin + "," + ApplicationConstants.Developer)]
+        [ProducesResponseType(typeof(List<CommentViewModel>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> GetCommentsForTask(Guid taskId)
+            => Ok(await _taskService.GetCommentsForTask(taskId));
+
     }
 }

@@ -14,7 +14,11 @@ namespace TaskFlow.Infrastructure.Data.EntitiesConfiguration
 
             builder.Property(x => x.Content)
                    .HasMaxLength(1000)
-                   .IsRequired();
+                   .IsRequired(false);
+
+            builder.Property(x => x.Document)
+                   .HasMaxLength(2000)
+                   .IsRequired(false);
 
             builder.Property(x => x.Progress)
                    .HasConversion(

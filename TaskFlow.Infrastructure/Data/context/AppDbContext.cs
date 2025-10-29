@@ -15,6 +15,7 @@ namespace TaskFlow.Infrastructure.Data.context
     {
         public DbSet<Developer> Developers { get; set; }
         public DbSet<TaskEntity> Tasks { get; set; }
+        public DbSet<Comment> Comments { get; set; }
 
         private readonly IHttpContextAccessor _httpContextAccessor;
 

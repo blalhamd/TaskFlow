@@ -1,4 +1,5 @@
-﻿using TaskFlow.Domain.Enums;
+﻿using Microsoft.AspNetCore.Http;
+using TaskFlow.Domain.Enums;
 
 namespace TaskFlow.Core.Models.Dtos.V1
 {
@@ -7,7 +8,8 @@ namespace TaskFlow.Core.Models.Dtos.V1
         public Guid Id { get; set; }
         public DateTimeOffset StartAt { get; set; }
         public DateTimeOffset EndAt { get; set; }
-        public string Content { get; set; } = string.Empty;
+        public string? Content { get; set; }
+        public IFormFile? Document { get; set; }
         public TaskProgress Progress { get; set; }
 
         // Relationships

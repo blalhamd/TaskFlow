@@ -15,5 +15,7 @@ namespace TaskFlow.Core.IServices
         Task<TaskEntityViewModel> UpdateTaskDetails(UpdateTaskEntity taskEntity, CancellationToken cancellationToken);
         Task<bool> DeleteTaskById(Guid taskId, CancellationToken cancellationToken);
         Task<bool> ChangeTaskStatus(Guid taskId, TaskProgress progress, CancellationToken cancellationToken);
+        Task<bool> AddCommentToTask(Guid userId, Guid taskId, CreateCommentRequest comment, CancellationToken cancellationToken);
+        Task<List<CommentViewModel>> GetCommentsForTask(Guid taskId);
     }
 }

@@ -1,5 +1,4 @@
 ﻿using System.Linq.Expressions;
-
 using TaskFlow.Domain.Entities.Base;
 
 namespace TaskFlow.Core.IRepositories.Generic

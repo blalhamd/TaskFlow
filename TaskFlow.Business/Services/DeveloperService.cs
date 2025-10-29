@@ -1,7 +1,9 @@
 ﻿using FluentValidation;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using TaskFlow.Business.Helper.Socket;
 using TaskFlow.Core.IServices;
 using TaskFlow.Core.IUnit;
 using TaskFlow.Core.Models.Dtos.V1;
@@ -21,8 +23,9 @@ namespace TaskFlow.Business.Services
         private readonly IImageService _imageService;
         private readonly IConfiguration _configuration;
         private readonly ILogger<DeveloperService> _logger;
+        private readonly IHubContext<DeveloperHub> _developerHub;
         private readonly string _baseUrl;
-        public DeveloperService(IUnitOfWorkAsync unitOfWork, IValidator<CreateDeveloperRequest> validator, UserManager<ApplicationUser> userManager, IImageService imageService, IConfiguration configuration, ILogger<DeveloperService> logger)
+        public DeveloperService(IUnitOfWorkAsync unitOfWork, IValidator<CreateDeveloperRequest> validator, UserManager<ApplicationUser> userManager, IImageService imageService, IConfiguration configuration, ILogger<DeveloperService> logger, IHubContext<DeveloperHub> developerHub)
         {
             _unitOfWork = unitOfWork;
             _validator = validator;
@@ -31,6 +34,7 @@ namespace TaskFlow.Business.Services
             _configuration = configuration;
             _logger = logger;
             _baseUrl = _configuration["BaseUrl"] ?? "default.png";
+            _developerHub = developerHub;
         }
 
         public async Task<PagesResult<DeveloperViewModel>> GetAllDevelopers(int pageIndex, int pageSize)
@@ -47,17 +51,7 @@ namespace TaskFlow.Business.Services
             if (!developers.Any())
                 return new PagesResult<DeveloperViewModel>([], pageIndex, pageSize, (int)totalCount);
 
-            var developersVm = developers.Select(developer => new DeveloperViewModel
-            {
-                Id = developer.Id,
-                Age = developer.Age,
-                FullName = developer.FullName,
-                ImagePath = string.IsNullOrEmpty(developer.ImagePath) ? _baseUrl : $"{_baseUrl}{developer.ImagePath}",
-                JobLevel = developer.JobLevel,
-                JobTitle = developer.JobTitle,
-                UserId = developer.UserId,
-                YearOfExperience = developer.YearOfExperience,
-            })
+            var developersVm = developers.Select(MapToDeveloperVM)
                 .ToList();
 
             _logger.LogInformation("Developers retrived successfully");
@@ -113,15 +107,7 @@ namespace TaskFlow.Business.Services
                 _logger.LogInformation("image created successfully on server");
             }
 
-            var developer = new Developer(
-                request.FullName,
-                request.Age,
-                newImagePath,
-                request.JobTitle,
-                request.YearOfExperience,
-                request.JobLevel,
-                user.Id
-                );
+            var developer = CreateNewDeveloper(request, newImagePath!, user.Id);
 
             await _unitOfWork.Repository<Developer>().CreateAsync(developer, cancellationToken);
             
@@ -142,12 +128,17 @@ namespace TaskFlow.Business.Services
             await _userManager.AddToRoleAsync(user, ApplicationConstants.Developer);
             _logger.LogInformation("created user is successfully and had developer role too.");
 
+            var developerVM = MapToDeveloperVM(developer);
+
+            // proadcasting to all online users
+            await _developerHub.Clients.All.SendAsync("createdeveloper", developerVM, cancellationToken);
+
             return true;
         }
 
+        
         public async Task<DeveloperViewViewModel> GetById(Guid id)
         {
-
             _logger.LogInformation("Get developer with {Id}", id);
 
             var developer = await _unitOfWork.Repository<Developer>().GetByIdAsync(id, includes: x => x.AssignedTasks);
@@ -158,27 +149,7 @@ namespace TaskFlow.Business.Services
                 throw new ItemNotFoundException("Developer is not exist");
             }
 
-            var developerVM = new DeveloperViewViewModel
-            {
-                Id = id,
-                FullName = developer.FullName,
-                Age = developer.Age,
-                YearOfExperience = developer.YearOfExperience,
-                ImagePath = string.IsNullOrEmpty(developer.ImagePath) ? _baseUrl : $"{_baseUrl}{developer.ImagePath}",
-                JobLevel = developer.JobLevel,
-                JobTitle = developer.JobTitle,
-                UserId = developer.UserId,
-                AssignedTasks = (developer.AssignedTasks.Count() > 0)? developer.AssignedTasks.Select(x => new TaskEntityViewModel
-                {
-                    Id = x.Id,
-                    StartAt = x.StartAt,
-                    EndAt = x.EndAt,
-                    Content = x.Content,
-                    Progress = x.Progress,
-                    IsFinished = x.IsFinished,
-                    AssignedToDeveloperId = x.AssignedToDeveloperId,
-                }).ToList() : []
-            };
+            var developerVM = MapToDeveloperViewViewModel(developer);
 
             _logger.LogInformation("Developer with {Id} retrived successfully", id);
 
@@ -233,6 +204,10 @@ namespace TaskFlow.Business.Services
                 await _imageService.RemoveImage(oldPath);
             }
 
+            var developerVM = MapToDeveloperVM(developer);
+
+            await _developerHub.Clients.All.SendAsync("updateddeveloper", developerVM, cancellationToken);
+
             return true;
         }
 
@@ -240,6 +215,7 @@ namespace TaskFlow.Business.Services
         {
             _logger.LogInformation("Deleting developer with Id: {Id}", developerId);
 
+            // fetch developer from DB
             var repo = _unitOfWork.Repository<Developer>();
             var developer = await repo.FirstOrDefaultAsync(x => x.Id == developerId);
 
@@ -249,6 +225,7 @@ namespace TaskFlow.Business.Services
                 throw new ItemNotFoundException("Developer does not exist");
             }
 
+            // soft delete for developer
             await repo.DeleteAsync(developer, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
@@ -258,8 +235,69 @@ namespace TaskFlow.Business.Services
                 await _imageService.RemoveImage(developer.ImagePath);
             }
 
+            // prodcasting to online clients
+            await _developerHub.Clients.All.SendAsync("deletedeveloper", developer, cancellationToken);
+
             return true;
         }
+
+        private DeveloperViewModel MapToDeveloperVM(Developer developer)
+        {
+            return new DeveloperViewModel
+            {
+                Id = developer.Id,
+                FullName = developer.FullName,
+                Age = developer.Age,
+                JobLevel = developer.JobLevel,
+                JobTitle = developer.JobTitle,
+                UserId = developer.UserId,
+                YearOfExperience = developer.YearOfExperience,
+                ImagePath = string.IsNullOrEmpty(developer.ImagePath) ? _baseUrl : $"{_baseUrl}{developer.ImagePath}",
+            };
+        }
+
+        private DeveloperViewViewModel MapToDeveloperViewViewModel(Developer developer)
+        {
+            return new DeveloperViewViewModel
+            {
+                Id = developer.Id,
+                FullName = developer.FullName,
+                Age = developer.Age,
+                YearOfExperience = developer.YearOfExperience,
+                ImagePath = string.IsNullOrEmpty(developer.ImagePath) ? _baseUrl : $"{_baseUrl}{developer.ImagePath}",
+                JobLevel = developer.JobLevel,
+                JobTitle = developer.JobTitle,
+                UserId = developer.UserId,
+                AssignedTasks = (developer.AssignedTasks.Count() > 0) ? 
+                developer.AssignedTasks.Select(MapToTaskEntityViewModel).ToList() : []
+            };
+        }
+        private TaskEntityViewModel MapToTaskEntityViewModel(TaskEntity task)
+        {
+            return new TaskEntityViewModel
+            {
+                Id = task.Id,
+                StartAt = task.StartAt,
+                EndAt = task.EndAt,
+                Content = task.Content,
+                Document = string.IsNullOrEmpty(task.Document) ? null : $"{_baseUrl}{task.Document}",
+                Progress = task.Progress,
+                IsFinished = task.IsFinished,
+                AssignedToDeveloperId = task.AssignedToDeveloperId,
+            };
+        }
+
+        private Developer CreateNewDeveloper(CreateDeveloperRequest request, string newImagePath, Guid userId)
+           => new Developer(
+                request.FullName,
+                request.Age,
+                newImagePath,
+                request.JobTitle,
+                request.YearOfExperience,
+                request.JobLevel,
+                userId
+                );
+
     }
 }
 
