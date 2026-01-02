@@ -1,7 +1,5 @@
-﻿using System.Diagnostics;
+﻿using Microsoft.AspNetCore.Mvc;
 using System.Net;
-using System.Text.Json;
-using TaskFlow.API.Models;
 using TaskFlow.Shared.Exceptions;
 
 namespace TaskFlow.API.Middlewares
@@ -10,12 +8,13 @@ namespace TaskFlow.API.Middlewares
     {
         private readonly RequestDelegate _next;
         private readonly ILogger<ErrorHandlingMiddleware> _logger;
-        private readonly IHostEnvironment _host;
-        public ErrorHandlingMiddleware(RequestDelegate next, ILogger<ErrorHandlingMiddleware> logger, IHostEnvironment host)
+        private readonly IHostEnvironment _env;
+
+        public ErrorHandlingMiddleware(RequestDelegate next, ILogger<ErrorHandlingMiddleware> logger, IHostEnvironment env)
         {
             _next = next;
             _logger = logger;
-            _host = host;
+            _env = env;
         }
 
         public async Task InvokeAsync(HttpContext context)
@@ -26,56 +25,42 @@ namespace TaskFlow.API.Middlewares
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An unhandled error occurred during request processing for path {RequestPath}", context.Request.Path);
-                await HandleExceptionAsync(ex, context);
+                _logger.LogError(ex, "An unhandled exception occurred: {Message}", ex.Message);
+                await HandleExceptionAsync(context, ex);
             }
         }
 
-        private async Task HandleExceptionAsync(Exception ex, HttpContext context)
+        private async Task HandleExceptionAsync(HttpContext context, Exception ex)
         {
-            var traceId = Activity.Current?.Id ?? context.TraceIdentifier;
-
-            context.Response.ContentType = "application/json";
-            context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-
-            var isDev = _host.IsDevelopment();
-
-            var message = isDev ? ex.Message : "An unexpected error occurred.";
-            var InnerExceptionMessage = isDev ? ex.InnerException?.Message : null;
-
-
-            var response = new CustomErrorResponse(context.Response.StatusCode, message, InnerExceptionMessage!, traceId);
-
-            switch (ex)
+            var statusCode = ex switch
             {
-                case ItemNotFoundException:
-                    response.StatusCode = (int)HttpStatusCode.NotFound;
-                    break;
-                case BadRequestException:
-                    response.StatusCode = (int)HttpStatusCode.BadRequest;
-                    break;
-                case ItemAlreadyExistsException:
-                    response.StatusCode = (int)HttpStatusCode.Conflict;
-                    break;
-                case InvalidOperationException:
-                    response.StatusCode = (int)HttpStatusCode.BadRequest;
-                    break;
-                case UnauthorizedAccessException:
-                    {
-                        response.StatusCode = (int)HttpStatusCode.Unauthorized;
-                        response.ErrorMessage = "Unauthorized";
-                    }
-                    break;
-                default:
-                    break;
+                UnauthorizedAccessException => HttpStatusCode.Unauthorized,
+                ItemNotFoundException => HttpStatusCode.NotFound,
+                BadRequestException or ArgumentException => HttpStatusCode.BadRequest,
+                ItemAlreadyExistsException => HttpStatusCode.Conflict,
+                ValidationException => HttpStatusCode.UnprocessableEntity,
+                _ => HttpStatusCode.InternalServerError
+            };
+
+            var problemDetails = new ProblemDetails
+            {
+                Status = (int)statusCode,
+                Type = $"https://httpstatuses.com/{(int)statusCode}",
+                Title = _env.IsDevelopment() ? ex.Message : "An unexpected error occurred.",
+                Instance = context.Request.Path,
+                Detail = _env.IsDevelopment() ? ex.StackTrace : "Please contact support if the issue persists."
+            };
+
+            if (ex is ValidationException valEx)
+            {
+                problemDetails.Title = "Validation Failed";
+                problemDetails.Extensions.Add("errors", valEx.Message);
             }
 
-            var json = JsonSerializer.Serialize(response, new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            });
+            context.Response.ContentType = "application/problem+json";
+            context.Response.StatusCode = (int)statusCode;
 
-            await context.Response.WriteAsync(json);
+            await context.Response.WriteAsJsonAsync(problemDetails);
         }
     }
 }

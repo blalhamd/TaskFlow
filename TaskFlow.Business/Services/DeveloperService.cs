@@ -8,10 +8,12 @@ using TaskFlow.Core.IServices;
 using TaskFlow.Core.IUnit;
 using TaskFlow.Core.Models.Dtos.V1;
 using TaskFlow.Core.Models.ViewModels.V1;
+using TaskFlow.Domain.Common;
 using TaskFlow.Domain.Entities;
 using TaskFlow.Domain.Entities.Identity;
+using TaskFlow.Domain.Enums;
+using TaskFlow.Domain.Errors;
 using TaskFlow.Shared.Common;
-using TaskFlow.Shared.Exceptions;
 
 namespace TaskFlow.Business.Services
 {
@@ -33,11 +35,12 @@ namespace TaskFlow.Business.Services
             _imageService = imageService;
             _configuration = configuration;
             _logger = logger;
-            _baseUrl = _configuration["BaseUrl"] ?? "default.png";
+            _baseUrl = _configuration["BaseUrl"] ?? "https://localhost:5001/images/";
             _developerHub = developerHub;
         }
 
-        public async Task<PagesResult<DeveloperViewModel>> GetAllDevelopers(int pageIndex, int pageSize)
+
+        public async Task<ValueResult<PagesResult<DeveloperViewModel>>> GetAllDevelopers(int pageIndex, int pageSize)
         {
             _logger.LogInformation("Fetching developers page {PageIndex} with size {PageSize}", pageIndex, pageSize);
 
@@ -49,181 +52,161 @@ namespace TaskFlow.Business.Services
             var developers = await repo.GetAllAsync(predicate: null, orderBy: null, pageIndex, pageSize, includes: null!);
 
             if (!developers.Any())
-                return new PagesResult<DeveloperViewModel>([], pageIndex, pageSize, (int)totalCount);
+                return ValueResult<PagesResult<DeveloperViewModel>>.Success(new PagesResult<DeveloperViewModel>([], pageIndex, pageSize, (int)totalCount));
 
-            var developersVm = developers.Select(MapToDeveloperVM)
-                .ToList();
+            var developersVm = developers.Select(MapToDeveloperVM).ToList();
 
             _logger.LogInformation("Developers retrived successfully");
-            return new PagesResult<DeveloperViewModel>(developersVm, pageIndex, pageSize, (int)totalCount);
+            return ValueResult<PagesResult<DeveloperViewModel>>.Success(new PagesResult<DeveloperViewModel>(developersVm, pageIndex, pageSize, (int)totalCount));
         }
 
-        public async Task<bool> CreateDeveloper(CreateDeveloperRequest request, CancellationToken cancellationToken)
+
+        public async Task<Result> CreateDeveloper(CreateDeveloperRequest request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Creating new developer: {Email}", request.Email);
 
             var validationResult = await _validator.ValidateAsync(request);
-
-            if(!validationResult.IsValid)
+            if (!validationResult.IsValid)
             {
-                var errors = validationResult.Errors.Select(x => x.ErrorMessage).ToList();
-                _logger.LogWarning("Invalid data of request because {Errors}", errors);
-                throw new BadRequestException(string.Join(",", errors));
+                var error = validationResult.Errors.First();
+                return Result.Failure(new Error(error.ErrorCode, error.ErrorMessage, ErrorType.Validation));
             }
+
+            var trimmedFullName = request.FullName.Trim();
+            var trimmedJobTitle = request.JobTitle.Trim();
 
             var isExist = await _unitOfWork.Repository<Developer>()
-                                .IsExistAsync(d=> d.FullName.ToLower() == request.FullName.Trim().ToLower() &&
-                                                  d.JobTitle.ToLower() == request.JobTitle.Trim().ToLower() &&
-                                                  d.YearOfExperience == request.YearOfExperience);
+                .IsExistAsync(d => d.FullName == trimmedFullName &&
+                                   d.JobTitle == trimmedJobTitle &&
+                                   d.YearOfExperience == request.YearOfExperience);
 
-            if(isExist)
-            {
-                _logger.LogWarning("developer is already exist");
-                throw new ItemAlreadyExistsException("developer is already exist");
-            }
+            if (isExist)
+                return Result.Failure(DeveloperErrors.DeveloperAlreadyExist);
 
             var user = new ApplicationUser()
             {
                 Email = request.Email,
                 EmailConfirmed = true,
                 UserName = request.Email.Split('@')[0],
-                NormalizedUserName = request.Email.Split('@')[0].ToUpper(),
-                NormalizedEmail = request.Email.ToUpper(),
             };
 
             var identityResult = await _userManager.CreateAsync(user, request.Password);
-
-            if(!identityResult.Succeeded)
+            if (!identityResult.Succeeded)
             {
-                var errors = identityResult.Errors.Select(x => x.Description).ToList();
-                _logger.LogWarning("Can't create user because {Errors}", errors);
-                throw new BadRequestException(string.Join(",", errors));
+                var error = identityResult.Errors.First();
+                return Result.Failure(new Error(error.Code, error.Description, ErrorType.Validation));
             }
 
             string? newImagePath = null;
-            if (request.ImagePath != null)
+            try
             {
-                newImagePath = await _imageService.UploadImageOnServer(request.ImagePath, false, null!, cancellationToken);
-                _logger.LogInformation("image created successfully on server");
-            }
-
-            var developer = CreateNewDeveloper(request, newImagePath!, user.Id);
-
-            await _unitOfWork.Repository<Developer>().CreateAsync(developer, cancellationToken);
-            
-            var rowsAffected = await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-            if(rowsAffected <= 0)
-            {
-                _logger.LogError("Developer could not be created due to database failure.");
-                if (!string.IsNullOrEmpty(newImagePath))
+                if (request.ImagePath != null)
                 {
-                   await _imageService.RemoveImage(newImagePath);
+                    newImagePath = await _imageService.UploadImageOnServer(request.ImagePath, false, null!, cancellationToken);
+                    _logger.LogInformation("image created successfully on server");
                 }
-                await _userManager.DeleteAsync(user);
-                _logger.LogInformation("uploaded image removed from server");
-                _logger.LogInformation("created user removed from database");
+
+                var developerCreated = CreateNewDeveloper(request, newImagePath!, user.Id);
+                if (!developerCreated.IsSuccess)
+                {
+                    if (newImagePath != null) _imageService.RemoveImage(newImagePath);
+                    await _userManager.DeleteAsync(user);
+                    return Result.Failure(developerCreated.Error);
+                }
+
+                await _unitOfWork.Repository<Developer>().CreateAsync(developerCreated.Value, cancellationToken);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+                await _userManager.AddToRoleAsync(user, ApplicationConstants.Developer);
+                _logger.LogInformation("created user is successfully and had developer role too.");
+
+                // proadcasting to all online users
+                await _developerHub.Clients.All.SendAsync("createdeveloper", MapToDeveloperVM(developerCreated.Value), cancellationToken);
+
+                return Result.Success();
             }
+            catch (Exception)
+            {
+                if (!string.IsNullOrEmpty(newImagePath))
+                    _imageService.RemoveImage(newImagePath);
 
-            await _userManager.AddToRoleAsync(user, ApplicationConstants.Developer);
-            _logger.LogInformation("created user is successfully and had developer role too.");
-
-            var developerVM = MapToDeveloperVM(developer);
-
-            // proadcasting to all online users
-            await _developerHub.Clients.All.SendAsync("createdeveloper", developerVM, cancellationToken);
-
-            return true;
+                await _userManager.DeleteAsync(user);
+                throw;
+            }
         }
 
-        
-        public async Task<DeveloperViewViewModel> GetById(Guid id)
+
+        public async Task<ValueResult<DeveloperViewViewModel>> GetById(Guid id)
         {
             _logger.LogInformation("Get developer with {Id}", id);
 
             var developer = await _unitOfWork.Repository<Developer>().GetByIdAsync(id, includes: x => x.AssignedTasks);
-
             if (developer is null)
-            {
-                _logger.LogWarning("Developer with {Id} is not exist", id);
-                throw new ItemNotFoundException("Developer is not exist");
-            }
-
-            var developerVM = MapToDeveloperViewViewModel(developer);
+                return ValueResult<DeveloperViewViewModel>.Failure(DeveloperErrors.NotFound);
 
             _logger.LogInformation("Developer with {Id} retrived successfully", id);
 
-            return developerVM;
+            return ValueResult<DeveloperViewViewModel>.Success(MapToDeveloperViewViewModel(developer));
         }
 
-        public async Task<bool> UpdateDeveloper(UpdateDeveloperRequest request, CancellationToken cancellationToken)
+
+        public async Task<Result> UpdateDeveloper(UpdateDeveloperRequest request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Updating developer with Id: {Id}", request.Id);
 
             var repo = _unitOfWork.Repository<Developer>();
             var developer = await repo.FirstOrDefaultAsync(x => x.Id == request.Id);
-
             if (developer is null)
-            {
-                _logger.LogWarning("Developer with Id: {Id} does not exist", request.Id);
-                throw new ItemNotFoundException("Developer does not exist");
-            }
-
-            developer.SetFullName(request.FullName);
-            developer.SetJobLevel(request.JobLevel);
-            developer.SetAge(request.Age);
-            developer.SetJobTitle(request.JobTitle);
-            developer.SetYearOfExperience(request.YearOfExperience);
+                return Result.Failure(DeveloperErrors.NotFound);
 
             var oldPath = developer.ImagePath;
             string? newPath = null;
             if (request.ImagePath is not null)
             {
                 newPath = await _imageService.UploadImageOnServer(request.ImagePath, false, oldPath!, cancellationToken);
-                if (!string.IsNullOrEmpty(newPath))
-                {
-                    developer.SetImagePath(newPath);
-                }
             }
 
-            await repo.UpdateAsync(developer, cancellationToken);
-            var rowsAffected = await _unitOfWork.SaveChangesAsync(cancellationToken);
+            var updateResult = developer.Update(request.FullName, request.Age, newPath ?? oldPath, request.JobTitle, request.YearOfExperience, request.JobLevel, developer.UserId);
+            if (!updateResult.IsSuccess)
+            {
+                if (newPath != null) _imageService.RemoveImage(newPath);
+                return Result.Failure(updateResult.Error);
+            }
 
-            if (rowsAffected <= 0)
+            try
+            {
+                await repo.UpdateAsync(developer, cancellationToken);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+                // Remove the old image only after a successful update and if the image was changed
+                if (!string.IsNullOrEmpty(oldPath) && !string.IsNullOrEmpty(newPath) && oldPath != newPath)
+                {
+                    _imageService.RemoveImage(oldPath);
+                }
+
+                await _developerHub.Clients.All.SendAsync("updateddeveloper", MapToDeveloperVM(developer), cancellationToken);
+
+                return Result.Success();
+            }
+            catch (Exception)
             {
                 if (!string.IsNullOrEmpty(newPath))
-                {
-                    await _imageService.RemoveImage(newPath);
-                }
-                return false;
+                    _imageService.RemoveImage(newPath);
+
+                throw;
             }
-
-            // Remove the old image only after a successful update and if the image was changed
-            if (!string.IsNullOrEmpty(oldPath) && !string.IsNullOrEmpty(newPath) && oldPath != newPath)
-            {
-                await _imageService.RemoveImage(oldPath);
-            }
-
-            var developerVM = MapToDeveloperVM(developer);
-
-            await _developerHub.Clients.All.SendAsync("updateddeveloper", developerVM, cancellationToken);
-
-            return true;
         }
 
-        public async Task<bool> DeleteDeveloper(Guid developerId, CancellationToken cancellationToken)
+
+        public async Task<Result> DeleteDeveloper(Guid developerId, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Deleting developer with Id: {Id}", developerId);
 
             // fetch developer from DB
             var repo = _unitOfWork.Repository<Developer>();
             var developer = await repo.FirstOrDefaultAsync(x => x.Id == developerId);
-
             if (developer is null)
-            {
-                _logger.LogWarning("Developer with Id: {Id} does not exist", developerId);
-                throw new ItemNotFoundException("Developer does not exist");
-            }
+                return Result.Failure(DeveloperErrors.NotFound);
 
             // soft delete for developer
             await repo.DeleteAsync(developer, cancellationToken);
@@ -232,14 +215,15 @@ namespace TaskFlow.Business.Services
             // Optionally remove associated image
             if (!string.IsNullOrEmpty(developer.ImagePath))
             {
-                await _imageService.RemoveImage(developer.ImagePath);
+                _imageService.RemoveImage(developer.ImagePath);
             }
 
             // prodcasting to online clients
             await _developerHub.Clients.All.SendAsync("deletedeveloper", developer, cancellationToken);
 
-            return true;
+            return Result.Success();
         }
+
 
         private DeveloperViewModel MapToDeveloperVM(Developer developer)
         {
@@ -256,6 +240,7 @@ namespace TaskFlow.Business.Services
             };
         }
 
+
         private DeveloperViewViewModel MapToDeveloperViewViewModel(Developer developer)
         {
             return new DeveloperViewViewModel
@@ -268,10 +253,12 @@ namespace TaskFlow.Business.Services
                 JobLevel = developer.JobLevel,
                 JobTitle = developer.JobTitle,
                 UserId = developer.UserId,
-                AssignedTasks = (developer.AssignedTasks.Count() > 0) ? 
+                AssignedTasks = (developer.AssignedTasks.Count() > 0) ?
                 developer.AssignedTasks.Select(MapToTaskEntityViewModel).ToList() : []
             };
         }
+
+
         private TaskEntityViewModel MapToTaskEntityViewModel(TaskEntity task)
         {
             return new TaskEntityViewModel
@@ -287,15 +274,16 @@ namespace TaskFlow.Business.Services
             };
         }
 
-        private Developer CreateNewDeveloper(CreateDeveloperRequest request, string newImagePath, Guid userId)
-           => new Developer(
-                request.FullName,
-                request.Age,
-                newImagePath,
-                request.JobTitle,
-                request.YearOfExperience,
-                request.JobLevel,
-                userId
+
+        private ValueResult<Developer> CreateNewDeveloper(CreateDeveloperRequest request, string newImagePath, Guid userId)
+           => Developer.Create(
+                  request.FullName,
+                  request.Age,
+                  newImagePath,
+                  request.JobTitle,
+                  request.YearOfExperience,
+                  request.JobLevel,
+                  userId
                 );
 
     }

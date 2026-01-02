@@ -7,10 +7,12 @@ using TaskFlow.Core.IServices;
 using TaskFlow.Core.IUnit;
 using TaskFlow.Core.Models.Dtos.V1;
 using TaskFlow.Core.Models.ViewModels.V1;
+using TaskFlow.Domain.Common;
 using TaskFlow.Domain.Entities;
 using TaskFlow.Domain.Enums;
+using TaskFlow.Domain.Errors;
 using TaskFlow.Shared.Common;
-using TaskFlow.Shared.Exceptions;
+using Error = TaskFlow.Domain.Common.Error;
 
 namespace TaskFlow.Business.Services
 {
@@ -27,7 +29,15 @@ namespace TaskFlow.Business.Services
         private readonly IConfiguration _configuration;
         private readonly IHubContext<TaskHub> _hubContext;
         private readonly string _baseUrl;
-        public TaskService(IUnitOfWorkAsync unitOfWork, IImageService imageService, ILogger<TaskService> logger, IValidator<CreateTaskEntity> createTaskValidator, IValidator<UpdateTaskEntity> updateTaskValidator, IConfiguration configuration, IHubContext<TaskHub> hubContext)
+
+        public TaskService(
+            IUnitOfWorkAsync unitOfWork,
+            IImageService imageService,
+            ILogger<TaskService> logger,
+            IValidator<CreateTaskEntity> createTaskValidator,
+            IValidator<UpdateTaskEntity> updateTaskValidator,
+            IConfiguration configuration,
+            IHubContext<TaskHub> hubContext)
         {
             _unitOfWork = unitOfWork;
             _imageService = imageService;
@@ -36,80 +46,87 @@ namespace TaskFlow.Business.Services
             _updateTaskValidator = updateTaskValidator;
             _configuration = configuration;
             _hubContext = hubContext;
-            _baseUrl = _configuration["BaseUrl"] ?? "default.pdf";
+            _baseUrl = _configuration["BaseUrl"] ?? "https://localhost:5001/images/"; 
         }
 
-        public async Task<TaskEntityViewModel> AssignTaskEntity(CreateTaskEntity entity, CancellationToken cancellation)
+        public async Task<ValueResult<TaskEntityViewModel>> AssignTaskEntity(CreateTaskEntity entity, CancellationToken cancellation)
         {
-            _logger.LogInformation("Attempting to assign task to developer {DeveloperId}", entity.AssignedToDeveloperId);
+            _logger.LogInformation("Creating task for developer {DeveloperId}", entity.AssignedToDeveloperId);
 
+            // Validation
             var validationResult = await _createTaskValidator.ValidateAsync(entity, cancellation);
             if (!validationResult.IsValid)
             {
-                _logger.LogWarning("Invalid data {EndAt}, {Content} and {AssignedToDeveloperId}", entity.EndAt, entity.Content, entity.AssignedToDeveloperId);
-                throw new BadRequestException("Invalid data");
+                var error = validationResult.Errors.First();
+                return ValueResult<TaskEntityViewModel>.Failure(new Error(error.ErrorCode, error.ErrorMessage, ErrorType.Validation));
             }
 
+            // Upload Image
             string? documentPath = null;
             if(entity.Document is not null)
             {
                documentPath = await _imageService.UploadImageOnServer(entity.Document, false, null!, cancellation);
             }
 
-            var taskEntity = new TaskEntity(entity.StartAt, entity.EndAt, entity.Content, documentPath, TaskProgress.NotStarted);
-            taskEntity.AssignToDeveloper(entity.AssignedToDeveloperId);
+            // create task 
+            var result = TaskEntity.Create(entity.StartAt, entity.EndAt, entity.Content, documentPath);
+            if (!result.IsSuccess)
+            {
+                if (documentPath != null) _imageService.RemoveImage(documentPath);
+                return ValueResult<TaskEntityViewModel>.Failure(result.Error);
+            }
 
-            await _unitOfWork.Repository<TaskEntity>().CreateAsync(taskEntity, cancellation);
-            await _unitOfWork.SaveChangesAsync(cancellation);
+            result.Value.AssignToDeveloper(entity.AssignedToDeveloperId);
 
-            _logger.LogInformation("Task created and assigned successfully");
+            try
+            {
+                await _unitOfWork.Repository<TaskEntity>().CreateAsync(result.Value, cancellation);
+                await _unitOfWork.SaveChangesAsync(cancellation);
 
-            var taskVM = MapToModel(taskEntity);
+                var taskVM = MapToModel(result.Value);
 
-            await _hubContext.Clients.All.SendAsync("assigntask", taskVM, cancellation);
+                await _hubContext.Clients.All.SendAsync("assigntask", taskVM, cancellation);
 
-            return taskVM; 
+                _logger.LogInformation("Task created and assigned successfully");
+                return ValueResult<TaskEntityViewModel>.Success(taskVM);
+            }
+            catch (Exception)
+            {
+                if (documentPath != null) _imageService.RemoveImage(documentPath);
+                throw; // will handle by global handling middlerware
+            }
         }
 
-        public async Task<bool> ChangeTaskStatus(Guid taskId, TaskProgress progress, CancellationToken cancellationToken)
+        public async Task<Result> ChangeTaskStatus(Guid taskId, TaskProgress progress, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Attempting to change status of task {TaskId}", taskId);
 
             var task = await _unitOfWork.Repository<TaskEntity>().GetByIdAsync(taskId);
-
             if (task is null)
-            {
-                _logger.LogWarning("Task with {TaskId} not found", taskId);
-                throw new ItemNotFoundException("Task not found");
-            }
+                return Result.Failure(TaskErrors.NotFound);
 
             if (task.Progress == progress)
-            {
-                _logger.LogWarning("Progress of task with {TaskId} already set", taskId);
-                throw new BadRequestException("Task progress already set");
-            }
+                return Result.Success();
 
-            task.SetProgress(progress);
+            var result = task.UpdateProgress(progress);
+            if (!result.IsSuccess)
+                return Result.Failure(result.Error);
 
             await _unitOfWork.Repository<TaskEntity>().UpdateAsync(task, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("Task progress changed successfully");
 
-            return true;
+            return Result.Success();
         }
 
-        public async Task<bool> DeleteTaskById(Guid taskId, CancellationToken cancellationToken)
+        public async Task<Result> DeleteTaskById(Guid taskId, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Attempting to delete task with {TaskId}", taskId);
 
             var task = await _unitOfWork.Repository<TaskEntity>().GetByIdAsync(taskId);
-
             if (task is null)
-            {
-                _logger.LogWarning("Task with {TaskId} not found", taskId);
-                throw new ItemNotFoundException("Task not found");
-            }
+                return Result.Failure(TaskErrors.NotFound);
 
             await _unitOfWork.Repository<TaskEntity>().DeleteAsync(task, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -117,25 +134,21 @@ namespace TaskFlow.Business.Services
             _logger.LogInformation("Task with {TaskId} deleted successfully", taskId);
             await _hubContext.Clients.All.SendAsync("deletetask", task, cancellationToken);
 
-            return true;
+            return Result.Success();
         }
 
-        public async Task<TaskEntityViewModel> GetTaskById(Guid taskId)
+        public async Task<ValueResult<TaskEntityViewModel>> GetTaskById(Guid taskId)
         {
             _logger.LogInformation("Attempting to get task by {TaskId}", taskId);
 
             var task = await _unitOfWork.Repository<TaskEntity>().GetByIdAsync(taskId);
-
             if (task is null)
-            {
-                _logger.LogWarning("Task with {TaskId} not found", taskId);
-                throw new ItemNotFoundException("Task not found");
-            }
+                return ValueResult<TaskEntityViewModel>.Failure(TaskErrors.NotFound);
 
-            return MapToModel(task);
+            return ValueResult<TaskEntityViewModel>.Success(MapToModel(task));
         }
 
-        public async Task<PagesResult<TaskEntityViewModel>> GetTasks(Guid userId, int pageNumber, int pageSize)
+        public async Task<ValueResult<PagesResult<TaskEntityViewModel>>> GetTasks(Guid userId, int pageNumber, int pageSize)
         {
             _logger.LogInformation("Attempting to get tasks for {UserId} with paging", userId);
 
@@ -143,10 +156,7 @@ namespace TaskFlow.Business.Services
                 .FirstOrDefaultAsync(x => x.UserId == userId);
 
             if (developer is null)
-            {
-                _logger.LogWarning("Developer with {UserId} not found", userId);
-                throw new ItemNotFoundException("Developer not found");
-            }
+                return ValueResult<PagesResult<TaskEntityViewModel>>.Failure(DeveloperErrors.NotFound);
 
             pageNumber = Math.Max(pageNumber, 1);
             pageSize = Math.Clamp(pageSize, 1, 10);
@@ -158,11 +168,11 @@ namespace TaskFlow.Business.Services
 
             var tasksVM = tasks.Select(MapToModel).ToList();
 
-            return new PagesResult<TaskEntityViewModel>(tasksVM, pageNumber, pageSize, (int)totalCount);
+            return ValueResult<PagesResult<TaskEntityViewModel>>.Success(new PagesResult<TaskEntityViewModel>(tasksVM, pageNumber, pageSize, (int)totalCount));
         }
 
 
-        public async Task<PagesResult<TaskEntityViewModel>> GetTasks(int pageNumber, int pageSize)
+        public async Task<ValueResult<PagesResult<TaskEntityViewModel>>> GetTasks(int pageNumber, int pageSize)
         {
             _logger.LogInformation("Attempting to get tasks with paging");
 
@@ -176,10 +186,10 @@ namespace TaskFlow.Business.Services
 
             var tasksVM = tasks.Select(MapToModel).ToList();
 
-            return new PagesResult<TaskEntityViewModel>(tasksVM, pageNumber, pageSize, (int)totalCount);
+            return ValueResult<PagesResult<TaskEntityViewModel>>.Success(new PagesResult<TaskEntityViewModel>(tasksVM, pageNumber, pageSize, (int)totalCount));
         }
 
-        public async Task<PagesResult<TaskEntityViewModel>> GetTasksByStatus(TaskProgress taskProgress, int pageNumber, int pageSize)
+        public async Task<ValueResult<PagesResult<TaskEntityViewModel>>> GetTasksByStatus(TaskProgress taskProgress, int pageNumber, int pageSize)
         {
             _logger.LogInformation("Attempting to get tasks with {TaskProgress} and with paging", taskProgress);
 
@@ -196,104 +206,111 @@ namespace TaskFlow.Business.Services
 
             var tasksVM = tasks.Select(MapToModel).ToList();
 
-            return new PagesResult<TaskEntityViewModel>(tasksVM, pageNumber, pageSize, (int)totalCount);
+            return ValueResult<PagesResult<TaskEntityViewModel>>.Success(new PagesResult<TaskEntityViewModel>(tasksVM, pageNumber, pageSize, (int)totalCount));
         }
 
-        public async Task<TaskEntityViewModel> UpdateTaskDetails(UpdateTaskEntity taskEntity, CancellationToken cancellationToken)
+        public async Task<ValueResult<TaskEntityViewModel>> UpdateTaskDetails(UpdateTaskEntity taskEntity, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Attempting to update task with {TaskId}", taskEntity.Id);
 
             var validationResult = await _updateTaskValidator.ValidateAsync(taskEntity);
             if (!validationResult.IsValid)
             {
-                _logger.LogWarning("Invalid data {EndAt}, {StartAt}, {Progress}, {Content} and {AssignedToDeveloperId}", taskEntity.EndAt, taskEntity.StartAt, taskEntity.Progress, taskEntity.Content, taskEntity.AssignedToDeveloperId);
-                throw new BadRequestException("Invalid data");
+                var error = validationResult.Errors.First();
+                return ValueResult<TaskEntityViewModel>.Failure(new Error(error.ErrorCode, error.ErrorMessage, ErrorType.Validation));
             }
 
             var task = await _unitOfWork.Repository<TaskEntity>().FirstOrDefaultAsync(x => x.Id == taskEntity.Id);
-
             if(task is null)
-            {
-                _logger.LogWarning("Task with {TaskId} not found", taskEntity.Id);
-                throw new ItemNotFoundException("Task not found");
-            }
-
-            task.SetStartAt(taskEntity.StartAt);
-            task.SetEndAt(taskEntity.EndAt);
-            task.SetProgress(taskEntity.Progress);
-            task.AssignToDeveloper(taskEntity.AssignedToDeveloperId);
-            if (!string.IsNullOrEmpty(taskEntity.Content))
-            {
-                task.SetContent(taskEntity.Content);
-            }
+                return ValueResult<TaskEntityViewModel>.Failure(TaskErrors.NotFound);
 
             string? oldPath = task.Document;
             string? newPath = null;
 
-            if(taskEntity.Document != null)
+            if (taskEntity.Document != null)
             {
-                newPath = await _imageService.UploadImageOnServer(taskEntity.Document,false,oldPath!,cancellationToken);
-            }
-            if (!string.IsNullOrEmpty(newPath))
-            {
-                task.SetDocument(newPath);
+                newPath = await _imageService.UploadImageOnServer(taskEntity.Document, false, oldPath!, cancellationToken);
             }
 
-            await _unitOfWork.Repository<TaskEntity>().UpdateAsync(task, cancellationToken);
-            var rowsAffected = await _unitOfWork.SaveChangesAsync(cancellationToken);
+            var updateResult = task.Update(taskEntity.StartAt, taskEntity.EndAt, taskEntity.Content, newPath);
+            if (!updateResult.IsSuccess)
+            {
+                if (newPath != null) _imageService.RemoveImage(newPath); // Cleanup new file
+                return ValueResult<TaskEntityViewModel>.Failure(updateResult.Error);
+            }
+            task.AssignToDeveloper(taskEntity.AssignedToDeveloperId);
 
-            if(rowsAffected < 0)
+            try
+            {
+                await _unitOfWork.Repository<TaskEntity>().UpdateAsync(task, cancellationToken);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+                var taskVM = MapToTaskVM(task);
+
+                await _hubContext.Clients.All.SendAsync("updatetask", taskVM, cancellationToken);
+
+                if (newPath != null && !string.IsNullOrEmpty(oldPath))
+                {
+                    _imageService.RemoveImage(oldPath);
+                }
+
+                return ValueResult<TaskEntityViewModel>.Success(taskVM!);
+            }
+            catch (Exception)
             {
                 if (!string.IsNullOrEmpty(newPath))
-                {
-                    await _imageService.RemoveImage(newPath);
-                }
+                    _imageService.RemoveImage(newPath);
+                throw;
             }
-
-            var taskVM = MapToTaskVM(task);
-
-            await _hubContext.Clients.All.SendAsync("updatetask", taskVM, cancellationToken);
-
-            return taskVM!;
         }
 
-        public async Task<bool> AddCommentToTask(Guid userId, Guid taskId, CreateCommentRequest request, CancellationToken cancellationToken)
+        public async Task<ValueResult<CommentViewModel>> AddCommentToTask(Guid userId, Guid taskId, CreateCommentRequest request, CancellationToken cancellationToken)
         {
             var developer = await _unitOfWork.Repository<Developer>().FirstOrDefaultAsync(x => x.UserId == userId);
-
             if (developer is null)
-                throw new ItemNotFoundException("user not found"); // 89353308930a
+                return ValueResult<CommentViewModel>.Failure(UserErrors.NotFound);
 
-            var task = await _unitOfWork.Repository<TaskEntity>().FirstOrDefaultAsync(x => x.Id == taskId);
-
+            var task = await _unitOfWork.Repository<TaskEntity>().FirstOrDefaultAsync(x => x.Id == taskId, x => x.AssignedToDeveloper);
             if (task is null)
-                throw new ItemNotFoundException("task not found");
+                return ValueResult<CommentViewModel>.Failure(TaskErrors.NotFound);
 
-            var comment = new Comment
-            {
-                Content = request.Content,
-                DeveloperId = developer.Id,
-                TaskEntityId = taskId,
-            };
+            var result = Comment.Create(request.Content, taskId, developer.Id);
+            if (!result.IsSuccess)
+                return ValueResult<CommentViewModel>.Failure(result.Error);
 
-            task.Comments.Add(comment);
+
+            task.Comments.Add(result.Value);
 
             await _unitOfWork.Repository<TaskEntity>().UpdateAsync(task, cancellationToken);
-            return await _unitOfWork.SaveChangesAsync(cancellationToken) > 0;
+            var success = await _unitOfWork.SaveChangesAsync(cancellationToken) > 0;
+
+            if (success)
+            {
+                // notify the assigned developer that someone commented on his task
+                var assignedUserId = task.AssignedToDeveloper.UserId.ToString();
+                await _hubContext.Clients.User(assignedUserId)
+                    .SendAsync("notifycomment",
+                    new
+                    {
+                        From = developer.FullName,
+                        Content = result.Value.Content,
+                        TaskTitle = task.Content
+                    },
+                    cancellationToken);
+            }
+
+            return ValueResult<CommentViewModel>.Success(MapToCommentVM(comment: result.Value, developer.FullName));
         }
 
-        public async Task<List<CommentViewModel>> GetCommentsForTask(Guid taskId)
+        public async Task<ValueResult<List<CommentViewModel>>> GetCommentsForTask(Guid taskId)
         {
-            var taskDto = await _unitOfWork.taskRepositoryAsync
-                             .FirstOrDefaultAsync(x => x.Id == taskId);
-
+            var taskDto = await _unitOfWork.taskRepositoryAsync.FirstOrDefaultAsync(x => x.Id == taskId);
             if (taskDto is null)
-                throw new ItemNotFoundException("task not found");
+                return ValueResult<List<CommentViewModel>>.Failure(TaskErrors.NotFound);
 
-            var commentsVm = taskDto.CommentDtos.Select(MapToCommentViewModel)
-                .ToList();
+            var commentsVm = taskDto.CommentDtos.Select(MapToCommentViewModel).ToList();
 
-            return commentsVm;
+            return ValueResult<List<CommentViewModel>>.Success(commentsVm);
         }
 
         private TaskEntityViewModel? MapToTaskVM(TaskEntity task)
@@ -307,6 +324,15 @@ namespace TaskFlow.Business.Services
                 IsFinished = task.IsFinished,
                 Progress = task.Progress,
                 AssignedToDeveloperId = task.AssignedToDeveloperId,
+            };
+
+        private CommentViewModel MapToCommentVM(Comment comment, string fullName)
+            => new CommentViewModel
+            {
+                Id = comment.Id,
+                Content = comment.Content,
+                FullName = fullName,
+                CreatedAt = comment.CreatedAt,
             };
 
         private TaskEntityViewModel MapToModel(TaskEntity entity)

@@ -1,6 +1,5 @@
 ﻿using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
-using TaskFlow.API.Models;
 using TaskFlow.Core.IServices;
 using TaskFlow.Core.Models.Dtos.V1;
 using TaskFlow.Core.Models.ViewModels.V1;
@@ -25,7 +24,7 @@ namespace TaskFlow.API.Controllers
         /// <param name="request">The login request containing email and password.</param>
         /// <returns>
         /// A <see cref="LoginResponse"/> containing the JWT token, expiry time, and user details if authentication is successful.  
-        /// Returns a <see cref="CustomErrorResponse"/> if authentication fails.
+        /// Returns a <see cref="ProblemDetails"/> if authentication fails.
         /// </returns>
         /// <response code="200">Returns the generated JWT token and user information.</response>
         /// <response code="400">If the request is invalid or credentials are incorrect.</response>
@@ -33,7 +32,7 @@ namespace TaskFlow.API.Controllers
         [HttpPost("login")]
         [MapToApiVersion("1.0")]
         [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<LoginResponse>> LoginAsync(LoginRequest request)
           => Ok(await _authenticationService.LoginAsync(request));
 
@@ -57,7 +56,7 @@ namespace TaskFlow.API.Controllers
         [HttpPost("reset-password")]
         [MapToApiVersion("1.0")]
         [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<bool>> ResetPasswordAsync([FromBody] ResetPasswordRequest request)
            => Ok(await _authenticationService.ResetPasswordAsync(request));
 

@@ -14,70 +14,64 @@ namespace TaskFlow.Business.Services
         public ImageService(IWebHostEnvironment environment, ILogger<ImageService> logger)
         {
             _environment = environment;
-            _basePath = Path.Combine(_environment.WebRootPath);
+            _basePath = _environment.WebRootPath;
             _logger = logger;
         }
 
-
-        public async Task<string> UploadImageOnServer(IFormFile image, bool deleteIfExist = false, string oldPath = null, CancellationToken cancellationToken = default)
+        public async Task<string> UploadImageOnServer(
+            IFormFile image,
+            bool deleteIfExist = false,
+            string oldPath = null!,
+            CancellationToken cancellationToken = default)
         {
-
-            var folderPath = Path.Combine(_basePath, "assets", "images");
-            Directory.CreateDirectory(folderPath); // Ensure the folder exists
+            var folderPath = Path.Combine(_basePath, "images");
+            Directory.CreateDirectory(folderPath);
 
             if (deleteIfExist && oldPath is not null)
-            {
-                await RemoveImage($"{oldPath}");
-            }
+                RemoveImage(oldPath); // No need to await, now it's sync
 
-            string uniqueFileName = Guid.NewGuid().ToString() + "_" + image.FileName;
-
+            string uniqueFileName = $"{Guid.NewGuid()}_{image.FileName}";
             var fullPath = Path.Combine(folderPath, uniqueFileName);
 
-            using var stream = new FileStream(fullPath, FileMode.OpenOrCreate);
-            await image.CopyToAsync(stream, cancellationToken); // will put uploaded file in this path in wwwroot
-            stream.Close();
-
-            return $"assets/images/{uniqueFileName}";
-        }
-
-        public async Task RemoveImage(string oldPath)
-        {
-            if (string.IsNullOrWhiteSpace(oldPath))
+            using (var stream = new FileStream(fullPath, FileMode.Create))
             {
-                return;
+                await image.CopyToAsync(stream, cancellationToken);
             }
 
-            // 🔹 Ensure the correct absolute path
+            return $"images/{uniqueFileName}";
+        }
+
+        public void RemoveImage(string oldPath)
+        {
+            if (string.IsNullOrWhiteSpace(oldPath))
+                return;
+
+            string normalizedPath = oldPath.TrimStart('/').Replace("/", "\\");
+
             string imagePath = oldPath.StartsWith(_basePath)
                 ? oldPath
-                : Path.Combine(_basePath, oldPath.TrimStart('/').Replace("/", "\\"));
+                : Path.Combine(_basePath, normalizedPath);
 
-
-            // 🔹 Check if the file exists before deleting
             if (File.Exists(imagePath))
             {
                 try
                 {
-                    // 🔥 Ensure the file is not locked before deleting
                     File.SetAttributes(imagePath, FileAttributes.Normal);
-
-                    // 🔥 Delete the file
                     File.Delete(imagePath);
-                    _logger.LogInformation($"✅ Successfully deleted: {imagePath}");
+
+                    _logger.LogInformation($"Deleted: {imagePath}");
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning($"❌ Error deleting file: {ex.Message}");
-                    throw new Exception($"Failed to delete file: {imagePath}", ex);
+                    _logger.LogError(ex, $"Error deleting file: {imagePath}");
+                    throw;
                 }
             }
             else
             {
-                _logger.LogInformation($"⚠️ File not found: {imagePath}");
+                _logger.LogInformation($"File not found: {imagePath}");
             }
         }
-
-
     }
+
 }

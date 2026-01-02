@@ -1,11 +1,8 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using TaskFlow.Domain.Entities.Identity;
-using TaskFlow.Domain.Entities;
-using TaskFlow.Domain.Enums;
-using TaskFlow.Infrastructure.Data.context;
 using Microsoft.EntityFrameworkCore;
+using TaskFlow.Domain.Entities.Identity;
+using TaskFlow.Infrastructure.Data.context;
 using TaskFlow.Shared.Common;
-using System.Reflection.Metadata;
 
 namespace TaskFlow.Infrastructure.Data.SeedData
 {
@@ -46,16 +43,7 @@ namespace TaskFlow.Infrastructure.Data.SeedData
                     // Only seed developer profile and tasks for non-admin users
                     if (roleName != ApplicationConstants.Admin)
                     {
-                        var developer = LoadDeveloperProfileFor(user);
-                        developer.CreatedByUserId = user.Id;
-                        await context.Developers.AddAsync(developer);
-
-                        foreach (var task in LoadTasksForUser(user.Id))
-                        {
-                            task.CreatedByUserId = user.Id;
-                            task.AssignToDeveloper(user.Id);       
-                            await context.Tasks.AddAsync(task);
-                        }
+                       
                     }
                 }
 
@@ -87,33 +75,7 @@ namespace TaskFlow.Infrastructure.Data.SeedData
                 IsDeleted = false
             }, "Admin@123", ApplicationConstants.Admin),
 
-            (new ApplicationUser
-            {
-                Id = Guid.NewGuid(),
-                UserName = "bilal",
-                NormalizedUserName = "BILAL",
-                Email = "bilal@system.com",
-                NormalizedEmail = "BILAL@SYSTEM.COM",
-                EmailConfirmed = true,
-                SecurityStamp = Guid.NewGuid().ToString(),
-                CreatedAt = now,
-                CreatedByUserId = creatorId,
-                IsDeleted = false
-            }, "Bilal@123", ApplicationConstants.Developer),
-
-            (new ApplicationUser
-            {
-                Id = Guid.NewGuid(),
-                UserName = "ahmed",
-                NormalizedUserName = "AHMED",
-                Email = "ahmed@system.com",
-                NormalizedEmail = "AHMED@SYSTEM.COM",
-                EmailConfirmed = true,
-                SecurityStamp = Guid.NewGuid().ToString(),
-                CreatedAt = now,
-                CreatedByUserId = creatorId,
-                IsDeleted = false
-            }, "Ahmed@123", ApplicationConstants.Developer)
+           
         };
         }
 
@@ -148,47 +110,6 @@ namespace TaskFlow.Infrastructure.Data.SeedData
         }
         ];
 
-        /// <summary>
-        /// Creates a developer profile for a given user.
-        /// </summary>
-        private static Developer LoadDeveloperProfileFor(ApplicationUser user)
-        {
-            return new Developer(
-                fullName: $"{user.UserName} Sayed",
-                age: 22,
-                imagePath: "WhatsApp Image 2024-04-14 at 01.35.12_56142422.jpg",
-                jobTitle: ".NET Full Stack Developer",
-                yearOfExperience: 1,
-                jobLevel: JobLevel.Junior,
-                userId: user.Id
-            );
-        }
-
-        /// <summary>
-        /// Loads tasks and assigns to the specified developer user ID.
-        /// </summary>
-        private static IEnumerable<TaskEntity> LoadTasksForUser(Guid userId)
-        {
-            var now = DateTimeOffset.UtcNow;
-            return new List<TaskEntity>
-        {
-            new TaskEntity(
-                startAt: now.AddDays(1),
-                endAt: now.AddDays(3),
-                content: "Draw UML for TaskFlow System",
-                null,
-                progress: TaskProgress.NotStarted
-            )
-            ,
-
-            new TaskEntity(
-                startAt: now.AddDays(2),
-                endAt: now.AddDays(4),
-                content: "Implement Repository Pattern",
-                null,
-                progress: TaskProgress.NotStarted
-            )
-        };
-        }
+       
     }
 }

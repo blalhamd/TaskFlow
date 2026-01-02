@@ -41,7 +41,14 @@ namespace TaskFlow.DependencyInjection
         private static IServiceCollection RegisterConnectionString(this IServiceCollection services, IConfiguration configuration)
         {
             var connection = configuration["ConnectionStrings:DefaultConnectionString"];
-            services.AddDbContext<AppDbContext>(options=> options.UseSqlServer(connection));
+            services.AddDbContext<AppDbContext>(opt => opt.UseSqlServer(connection, sql =>
+            {
+                sql.EnableRetryOnFailure(
+                    maxRetryCount: 5,
+                    maxRetryDelay: TimeSpan.FromSeconds(10),
+                    errorNumbersToAdd: null
+                );
+            }));
             services.AddScoped<AppDbContext>();
 
             return services;

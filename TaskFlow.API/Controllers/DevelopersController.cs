@@ -1,7 +1,7 @@
 ﻿using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using TaskFlow.API.Models;
+using TaskFlow.API.Controllers.Base;
 using TaskFlow.Core.IServices;
 using TaskFlow.Core.Models.Dtos.V1;
 using TaskFlow.Core.Models.ViewModels.V1;
@@ -10,9 +10,8 @@ using TaskFlow.Shared.Common;
 namespace TaskFlow.API.Controllers
 {
     [ApiVersion("1.0")]    
-    [Route("api/v{version:apiVersion}/[controller]")]
-    [ApiController]
-    public class DevelopersController : ControllerBase
+    [Route("api/v{version:apiVersion}/developers")]
+    public class DevelopersController : BaseApiController
     {
         private readonly IDeveloperService _developerService;
 
@@ -35,11 +34,11 @@ namespace TaskFlow.API.Controllers
         [MapToApiVersion("1.0")]
         [Authorize(Roles = ApplicationConstants.Admin + "," + ApplicationConstants.Developer)]
         [ProducesResponseType(typeof(PagesResult<DeveloperViewModel>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<PagesResult<DeveloperViewModel>>> GetDevelopers(int pageIndex = 1, int pageSize = 10)
-            => Ok(await _developerService.GetAllDevelopers(pageIndex, pageSize));
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetDevelopers(int pageIndex = 1, int pageSize = 10)
+            => Success(await _developerService.GetAllDevelopers(pageIndex, pageSize));
 
 
         /// <summary>
@@ -51,12 +50,12 @@ namespace TaskFlow.API.Controllers
         [MapToApiVersion("1.0")]
         [Authorize(Roles = ApplicationConstants.Admin + "," + ApplicationConstants.Developer)]
         [ProducesResponseType(typeof(DeveloperViewViewModel), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status404NotFound)]
-        [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<DeveloperViewViewModel>> GetDeveloper(Guid id)
-            => Ok(await _developerService.GetById(id));
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetDeveloper(Guid id)
+            => Success(await _developerService.GetById(id));
 
 
         /// <summary>
@@ -73,13 +72,13 @@ namespace TaskFlow.API.Controllers
         [MapToApiVersion("1.0")]
         [Authorize(Roles = ApplicationConstants.Admin)]
         [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status409Conflict)]
-        [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<bool>> CreateDeveloper([FromForm] CreateDeveloperRequest request, CancellationToken cancellationToken = default)
-            => Ok(await _developerService.CreateDeveloper(request, cancellationToken));
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> CreateDeveloper([FromForm] CreateDeveloperRequest request, CancellationToken cancellationToken = default)
+            => Success(await _developerService.CreateDeveloper(request, cancellationToken));
 
         /// <summary>
         /// Updates details of a developer.
@@ -90,14 +89,14 @@ namespace TaskFlow.API.Controllers
         [HttpPut]
         [Authorize(Roles = ApplicationConstants.Admin + "," + ApplicationConstants.Manager)]
         [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateDeveloper(
             [FromForm] UpdateDeveloperRequest request,
             CancellationToken cancellationToken = default)
         {
             var result = await _developerService.UpdateDeveloper(request, cancellationToken);
-            return Ok(result);
+            return Success(result);
         }
 
         /// <summary>
@@ -109,11 +108,11 @@ namespace TaskFlow.API.Controllers
         [HttpDelete("{developerId}")]
         [Authorize(Roles = ApplicationConstants.Admin + "," + ApplicationConstants.Manager)]
         [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteDeveloper(Guid developerId, CancellationToken cancellationToken)
         {
             var result = await _developerService.DeleteDeveloper(developerId, cancellationToken);
-            return Ok(result);
+            return Success(result);
         }
     }
 }

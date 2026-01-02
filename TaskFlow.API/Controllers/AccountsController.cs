@@ -1,17 +1,16 @@
 ﻿using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TaskFlow.API.Controllers.Base;
 using TaskFlow.API.Extensions;
-using TaskFlow.API.Models;
 using TaskFlow.Core.IServices;
 using TaskFlow.Core.Models.Dtos.V1;
 
 namespace TaskFlow.API.Controllers
 {
     [ApiVersion("1.0")]
-    [Route("api/v{version:apiVersion}/[controller]")]
-    [ApiController]
-    public class AccountsController : ControllerBase
+    [Route("api/v{version:apiVersion}/accounts")]
+    public class AccountsController : BaseApiController
     {
         private readonly IAccountService _accountService;
 
@@ -29,10 +28,10 @@ namespace TaskFlow.API.Controllers
         [Authorize]
         [MapToApiVersion("1.0")]
         [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status404NotFound)]
-        [ProducesResponseType(typeof(CustomErrorResponse), StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
         {
             var userId = User.GetUserId();
@@ -40,8 +39,7 @@ namespace TaskFlow.API.Controllers
             if (userId is null)
                 return Unauthorized("Unauthorized user");
 
-            var result = await _accountService.ChangePasswordAsync(Guid.Parse(userId), request.CurrentPassword, request.NewPassword);
-            return Ok(result);
+            return Success(await _accountService.ChangePasswordAsync(Guid.Parse(userId), request.CurrentPassword, request.NewPassword));
         }
     }
 

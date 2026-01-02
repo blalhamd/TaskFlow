@@ -14,7 +14,6 @@ using TaskFlow.Infrastructure.Data.SeedData;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
 builder.Services.AddControllers(options =>
 {
     options.Filters.Add<RequestTimeCalculationFilter>();
@@ -48,7 +47,6 @@ var app = builder.Build();
 // Add Serilog's request logging middleware for HTTP requests
 app.UseSerilogRequestLogging();
 
-
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -60,7 +58,7 @@ using (var scope = app.Services.CreateScope())
         var roleManager = services.GetRequiredService<RoleManager<ApplicationRole>>();
 
         // Apply pending migrations
-        await context.Database.MigrateAsync();
+        //await context.Database.MigrateAsync();
 
         // Run seeding
         await Seed.InitializeDataAsync(context, userManager, roleManager);
@@ -75,7 +73,7 @@ using (var scope = app.Services.CreateScope())
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi(); 
+    app.MapOpenApi();
     app.UseSwaggerUI(options =>
     {
         options.SwaggerEndpoint("/openapi/v1.json", "Project API v1");
@@ -87,9 +85,9 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseHttpsRedirection();
-app.UseStaticFiles();
+//app.UseHttpsRedirection();
 app.UseCors(); // you don't need to give name of policy because you specified defaultPolicy in CorsPolicy extension method
+app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -101,3 +99,5 @@ app.MapControllers();
 app.UseMiddleware<ErrorHandlingMiddleware>();
 
 app.Run();
+
+

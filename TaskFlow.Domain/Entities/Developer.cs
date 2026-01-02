@@ -1,27 +1,13 @@
-﻿using TaskFlow.Domain.Entities.Base;
+﻿using TaskFlow.Domain.Common;
+using TaskFlow.Domain.Entities.Base;
 using TaskFlow.Domain.Entities.Identity;
 using TaskFlow.Domain.Enums;
-using TaskFlow.Shared.Exceptions;
+using TaskFlow.Domain.Errors;
 
 namespace TaskFlow.Domain.Entities
 {
     public class Developer : BaseEntity
     {
-        public Developer(
-            string fullName,
-            int age, string? imagePath,
-            string jobTitle, int yearOfExperience,
-            JobLevel jobLevel, Guid userId)
-        {
-            SetFullName(fullName);
-            SetAge(age);
-            SetImagePath(imagePath);
-            SetJobTitle(jobTitle);
-            SetYearOfExperience(yearOfExperience);
-            SetJobLevel(jobLevel); 
-            AssignToUser(userId);
-        }
-
         public string FullName { get; private set; } = null!;
         public int Age { get; private set; }
         public string? ImagePath { get; private set; }
@@ -35,76 +21,108 @@ namespace TaskFlow.Domain.Entities
 
         public ICollection<TaskEntity> AssignedTasks { get; private set; } = new List<TaskEntity>();
 
-
-
-        // ===== Business Methods (Encapsulation) =====
-        public void SetFullName(string fullName)
+        private Developer() { } // EF Core will need it during reading from database
+      
+        private Developer(
+            string fullName,
+            int age, string? imagePath,
+            string jobTitle, int yearOfExperience,
+            JobLevel jobLevel, Guid userId)
         {
-            if (string.IsNullOrWhiteSpace(fullName))
-                throw new RequiredFieldMissingException("Full Name");
-
-            FullName = fullName.Trim();
-        }
-
-        public void SetAge(int age)
-        {
-            if (age <= 0)
-                throw new ValidationException("Age must be greater than zero");
-
+            FullName = fullName;
             Age = age;
-        }
-
-        public void SetImagePath(string? imagePath)
-        {
-            if (!string.IsNullOrWhiteSpace(imagePath) && !imagePath.EndsWith(".jpg") && !imagePath.EndsWith(".png"))
-                throw new ValidationException("Image path must be a valid JPG or PNG file");
-
             ImagePath = imagePath;
-        }
-
-        public void SetJobTitle(string jobTitle)
-        {
-            if (string.IsNullOrWhiteSpace(jobTitle))
-                throw new RequiredFieldMissingException("Job Title");
-
-            JobTitle = jobTitle.Trim();
-        }
-
-        public void SetYearOfExperience(int years)
-        {
-            if (years < 0)
-                throw new ValidationException("Years of experience cannot be negative");
-
-            YearOfExperience = years;
-        }
-
-        public void SetJobLevel(JobLevel jobLevel)
-        {
+            JobTitle = jobTitle;
+            YearOfExperience = yearOfExperience;
             JobLevel = jobLevel;
-        }
-
-        public void AssignToUser(Guid userId)
-        {
-            if (userId == Guid.Empty)
-                throw new ValidationException("Invalid User Id");
-
             UserId = userId;
         }
 
-        public void AssignTask(TaskEntity task)
+        // Static Factory method 
+        public static ValueResult<Developer> Create(
+            string fullName,
+            int age, string? imagePath,
+            string jobTitle, int yearOfExperience,
+            JobLevel jobLevel, Guid userId)
         {
-            if (task == null)
-                throw new ValidationException("Task cannot be null");
+            var error = Validate(fullName, age, imagePath, jobTitle, yearOfExperience, jobLevel, userId);
+            if(error != Error.None)
+                return ValueResult<Developer>.Failure(error);
 
-            AssignedTasks.Add(task);
+            return ValueResult<Developer>.Success(new Developer(fullName, age, imagePath, jobTitle, yearOfExperience, jobLevel, userId));
+        } 
+
+        // update method
+        public Result Update(string fullName,
+            int age, string? imagePath,
+            string jobTitle, int yearOfExperience,
+            JobLevel jobLevel, Guid userId)
+        {
+            var error = Validate(fullName, age, imagePath, jobTitle, yearOfExperience, jobLevel, userId);
+            if (error != Error.None)
+                return Result.Failure(error);
+
+            FullName = fullName.Trim();
+            Age = age;
+            ImagePath = imagePath;
+            JobTitle = jobTitle.Trim();
+            YearOfExperience = yearOfExperience;
+            JobLevel = jobLevel;
+            UserId = userId;
+
+            return Result.Success();
         }
 
-        public void RemoveTask(TaskEntity task)
+        private static Error Validate(string fullName,
+            int age, string? imagePath,
+            string jobTitle, int yearOfExperience,
+            JobLevel jobLevel, Guid userId)
         {
-            if (task == null)
-                throw new ValidationException("Task cannot be null");
+            if (string.IsNullOrEmpty(fullName))
+                return DeveloperErrors.EmptyFullName;
 
-            AssignedTasks.Remove(task);
+            if (age < 18 || age > 80)
+                return DeveloperErrors.InvalidAge;
+
+            if (string.IsNullOrWhiteSpace(jobTitle))
+                return DeveloperErrors.EmptyJobTitle;
+
+            if (yearOfExperience < 0)
+                return DeveloperErrors.InvalidExperience;
+
+            if (userId == Guid.Empty)
+                return DeveloperErrors.InvalidUserId;
+
+            return Error.None;
+        }
+       
+        public Result AssignToUser(Guid userId)
+        {
+            if (UserId == Guid.Empty)
+                return Result.Failure(DeveloperErrors.InvalidUserId);
+
+            UserId = userId;
+            return Result.Success();
+        }
+
+        public Result AssignTask(TaskEntity task)
+        {
+            if (task == null) 
+                return Result.Failure(new Error("Task.Null", "Task cannot be null", ErrorType.Validation));
+
+            if (AssignedTasks.Any(t => t.Id == task.Id))
+                return Result.Failure(DeveloperErrors.TaskAlreadyAssigned);
+
+            AssignedTasks.Add(task);
+            return Result.Success();
+        }
+
+        public Result RemoveTask(TaskEntity task)
+        {
+            if (task == null) return Result.Failure(new Error("Task.Null", "Task cannot be null", ErrorType.Validation));
+
+            var removed = AssignedTasks.Remove(task);
+            return removed ? Result.Success() : Result.Failure(new Error("Task.NotFound", "Task not found in developer list", ErrorType.NotFound));
         }
     }
 }

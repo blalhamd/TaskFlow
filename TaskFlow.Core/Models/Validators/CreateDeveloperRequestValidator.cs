@@ -1,11 +1,11 @@
 ﻿using FluentValidation;
 using TaskFlow.Core.Models.Dtos.V1;
+using TaskFlow.Shared.Common;
 
 namespace TaskFlow.Core.Models.Validators
 {
-    public class CreateDeveloperRequestValidator : AbstractValidator<CreateDeveloperRequest>
+    public class CreateDeveloperRequestValidator : ImageValidator<CreateDeveloperRequest>
     {
-        private const int maxFileSize = 2 * 1024 * 1024;
         public CreateDeveloperRequestValidator()
         {
 
@@ -36,24 +36,13 @@ namespace TaskFlow.Core.Models.Validators
             RuleFor(x => x.JobLevel)
                 .IsInEnum().WithMessage("Must select job level from suggested data");
 
-            // Apply rules only if ImagePath is not null
             RuleFor(x => x.ImagePath)
-                .NotNull().WithMessage("Please select an image file.")
-                .When(x => x.ImagePath != null);
-
-            // Rule for file size: must not exceed 2MB
-            RuleFor(x => x.ImagePath!.Length)
-                .LessThanOrEqualTo(maxFileSize)
-                .WithMessage($"The image size must not exceed {maxFileSize / (1024 * 1024)} MB.")
-                .When(x => x.ImagePath != null);
-
-            // Rule for file extension: must be .jpg or .png
-            RuleFor(x => x.ImagePath!.ContentType)
-                .Must(contentType => contentType.Equals("image/jpeg") || contentType.Equals("image/png"))
-                .WithMessage("Only .jpg and .png image types are allowed.")
-                .When(x => x.ImagePath != null);
-
-
+                    .NotNull().WithMessage("Please select an image file.")
+                    .Must(IsValidLength!)
+                    .WithMessage($"Document must be {ApplicationConstants.MaxFileSize / (1024 * 1024)} MB or less.")
+                    .Must(IsValidExtension!)
+                    .WithMessage($"Only {string.Join(", ", ApplicationConstants.AllowedExtensions)} files are allowed.")
+                    .When(x => x.ImagePath != null);
         }
     }
 }

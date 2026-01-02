@@ -1,13 +1,11 @@
 ﻿using FluentValidation;
-using Microsoft.AspNetCore.Http;
 using TaskFlow.Core.Models.Dtos.V1;
+using TaskFlow.Shared.Common;
 
 namespace TaskFlow.Core.Models.Validators
 {
-    public class CreateTaskEntityValidator : AbstractValidator<CreateTaskEntity>
+    public class CreateTaskEntityValidator : ImageValidator<CreateTaskEntity>
     {
-        private readonly string[] _allowedExtensions = { ".jpg", ".png", ".jpeg", ".pdf", ".docx" };
-        private const long MaxBytes = 2L * 1024 * 1024; // 2 MB
 
         public CreateTaskEntityValidator()
         {
@@ -21,10 +19,10 @@ namespace TaskFlow.Core.Models.Validators
             When(x => x.Document != null, () =>
             {
                 RuleFor(x => x.Document)
-                    .Must(FileSizeIsValid!)
-                    .WithMessage($"Document must be {MaxBytes / (1024 * 1024)} MB or less.")
-                    .Must(HasAllowedExtension!)
-                    .WithMessage($"Only {string.Join(", ", _allowedExtensions)} files are allowed.");
+                    .Must(IsValidLength!)
+                    .WithMessage($"Document must be {ApplicationConstants.MaxFileSize / (1024 * 1024)} MB or less.")
+                    .Must(IsValidExtension!)
+                    .WithMessage($"Only {string.Join(", ", ApplicationConstants.AllowedExtensions)} files are allowed.");
             });
 
             RuleFor(x => x.AssignedToDeveloperId)
@@ -45,13 +43,6 @@ namespace TaskFlow.Core.Models.Validators
         private static bool BeAFutureDate(DateTimeOffset endAt)
             => endAt >= DateTimeOffset.UtcNow;
 
-        private bool FileSizeIsValid(IFormFile file) => file.Length <= MaxBytes;
-
-        private bool HasAllowedExtension(IFormFile file)
-        {
-            var ext = Path.GetExtension(file.FileName)?.ToLowerInvariant();
-            return !string.IsNullOrEmpty(ext) && _allowedExtensions.Contains(ext);
-        }
     }
 }
 

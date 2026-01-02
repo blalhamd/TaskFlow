@@ -10,7 +10,7 @@
             SetTotalCount(totalCount);
         }
 
-        public IEnumerable<T> Items { get; private set; }
+        public IEnumerable<T>? Items { get; private set; }
         public int TotalCount { get; private set; }
         public int PageNumber { get; private set; }
         public int PageSize { get; private set; }

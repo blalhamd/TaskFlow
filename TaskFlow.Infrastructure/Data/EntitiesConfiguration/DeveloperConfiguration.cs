@@ -28,6 +28,7 @@ namespace TaskFlow.Infrastructure.Data.EntitiesConfiguration
                       v => v.ToString(), // Convert enum to string for saving
                       v => (JobLevel)Enum.Parse(typeof(JobLevel), v) // Convert string back to enum for reading
                    );
+
         }
     }
 }

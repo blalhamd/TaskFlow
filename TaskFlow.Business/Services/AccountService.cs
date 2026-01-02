@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using TaskFlow.Core.IServices;
+using TaskFlow.Domain.Common;
 using TaskFlow.Domain.Entities.Identity;
-using TaskFlow.Shared.Exceptions;
+using TaskFlow.Domain.Enums;
+using TaskFlow.Domain.Errors;
 
 namespace TaskFlow.Business.Services
 {
@@ -16,26 +18,38 @@ namespace TaskFlow.Business.Services
             _logger = logger;
         }
 
-        public async Task<bool> ChangePasswordAsync(Guid userId, string currentPassword, string newPassword)
+        public async Task<Result> ChangePasswordAsync(Guid userId, string currentPassword, string newPassword)
         {
-            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (string.IsNullOrWhiteSpace(currentPassword) || string.IsNullOrWhiteSpace(newPassword))
+            {
+                return Result.Failure(UserErrors.EmptyPassword);
+            }
+
+            var parsedUserId = userId.ToString();
+            var user = await _userManager.FindByIdAsync(parsedUserId);
             if (user is null)
             {
+
                 _logger.LogWarning("ChangePassword failed: User with ID {UserId} not found.", userId);
-                throw new ItemNotFoundException("User not found");
+                return Result.Failure(UserErrors.NotFound);
             }
 
             var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
 
             if (!result.Succeeded)
             {
-                var errors = string.Join(", ", result.Errors.Select(x => x.Description));
-                _logger.LogWarning("ChangePassword failed for user {UserId}. Errors: {Errors}", userId, errors);
-                throw new BadRequestException(errors);
+                var error = result.Errors.FirstOrDefault();
+
+                if(error is not null)
+                {
+                    _logger.LogWarning("ChangePassword failed for user {UserId}. Code: {Code}, Error: {Description}",
+                               userId, error.Code, error.Description);
+                    return Result.Failure(new Error(error.Code, error.Description, ErrorType.Validation));
+                }
             }
 
             _logger.LogInformation("Password successfully changed for user {UserId}", userId);
-            return true;
+            return Result.Success();
         }
     }
 }

@@ -1,0 +1,104 @@
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mssql-data-pvc          
+spec:
+  accessModes:
+    - ReadWriteOnce             
+  resources:
+    requests:
+      storage: 1Gi              
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: sql-service         
+spec:
+  selector:
+    app: sql-db2
+  ports:
+    - protocol: TCP
+      port: 1433                
+      targetPort: 1433       
+  type: ClusterIP         
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sql-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sql-db2
+  template:
+    metadata:
+      labels:
+        app: sql-db2
+    spec:
+      containers:
+      - name: mssql
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+        - name: ACCEPT_EULA
+          value: "Y"
+        - name: MSSQL_SA_PASSWORD
+          value: "Paw0rdStrong123!"  
+        ports:
+        - containerPort: 1433
+       
+        volumeMounts:
+        - name: mssql-storage
+          mountPath: /var/opt/mssql    
+      
+      volumes:
+      - name: mssql-storage
+        persistentVolumeClaim:
+          claimName: mssql-data-pvc
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-deployment
+spec:
+  replicas: 3               
+  selector:
+    matchLabels:
+      app: taskflow-api
+  template:
+    metadata:
+      labels:
+        app: taskflow-api
+    spec:
+      containers:
+      - name: api
+        image: taskflow-api:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: Development
+        - name: ConnectionStrings__DefaultConnection
+          value: "Server=sql-service;Database=TaskFlowDB2;User Id=sa;Password=Paw0rdStrong123!;Encrypt=False;TrustServerCertificate=True;"
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-service
+spec:
+  selector:
+    app: taskflow-api
+  ports:
+    - protocol: TCP
+      port: 9002                
+      targetPort: 8080      
+  type: LoadBalancer

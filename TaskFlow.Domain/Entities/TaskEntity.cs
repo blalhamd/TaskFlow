@@ -1,118 +1,159 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
+using TaskFlow.Domain.Common;
 using TaskFlow.Domain.Entities.Base;
 using TaskFlow.Domain.Enums;
-using TaskFlow.Shared.Exceptions;
+using TaskFlow.Domain.Errors;
 
 namespace TaskFlow.Domain.Entities
 {
     public class TaskEntity : BaseEntity
     {
-        public TaskEntity(DateTimeOffset startAt, DateTimeOffset endAt, string? content, string? document, TaskProgress progress)
+        // Private constructor which entity will create by Factory method
+        private TaskEntity() { }
+
+        private TaskEntity(
+            DateTimeOffset startAt,
+            DateTimeOffset endAt,
+            string? content,
+            string? document,
+            TaskProgress progress
+            )
         {
-            SetStartAt(startAt);
-            SetEndAt(endAt);
-            SetContent(content);
-            SetDocument(document);
-            SetProgress(progress);
+            StartAt = startAt;
+            EndAt = endAt;
+            Content = NormalizeString(content);
+            Document = NormalizeString(document);
+            Progress = progress;
         }
 
         public DateTimeOffset StartAt { get; private set; }
         public DateTimeOffset EndAt { get; private set; }
-        public string? Content { get; private set; } 
-        public string? Document {  get; private set; }
+        public string? Content { get; private set; }
+        public string? Document { get; private set; }
         public bool IsFinished { get; private set; }
         public TaskProgress Progress { get; private set; }
 
         // Relationships
         public Guid AssignedToDeveloperId { get; private set; }
         public Developer AssignedToDeveloper { get; private set; } = null!;
-        public List<Comment> Comments { get; set; } = [];
+        public List<Comment> Comments { get; private set; } = [];
 
         [NotMapped]
         public TimeSpan Duration => EndAt - StartAt;
 
-        // ===== Business Methods (Encapsulation) =====
-        public void SetStartAt(DateTimeOffset startAt)
+        // Factory Method
+        public static ValueResult<TaskEntity> Create(
+            DateTimeOffset startAt,
+            DateTimeOffset endAt,
+            string? content,
+            string? document
+            )
         {
-            if (startAt == default)
-                throw new ValidationException("Start date cannot be empty");
+            // 1. Validate all inputs before creating the object
+            var validationError = Validate(startAt, endAt, content, document);
+            if (validationError != Error.None)
+                return ValueResult<TaskEntity>.Failure(validationError);
 
-            if (EndAt != default && startAt >= EndAt)
-                throw new ValidationException("Start date must be before end date");
+            // 2. Create instance 
+            var task = new TaskEntity(
+                startAt,
+                endAt,
+                content,
+                document,
+                TaskProgress.NotStarted
+                );
+
+            return ValueResult<TaskEntity>.Success(task);
+        }
+
+        public Result Update(
+            DateTimeOffset startAt,
+            DateTimeOffset endAt,
+            string? content,
+            string? document)
+        {
+            var validationError = Validate(startAt, endAt, content, document);
+            if (validationError != Error.None)
+                return Result.Failure(validationError);
 
             StartAt = startAt;
-        }
-
-        public void SetEndAt(DateTimeOffset endAt)
-        {
-            if (endAt == default)
-                throw new ValidationException("End date cannot be empty");
-
-            if (StartAt != default && endAt <= StartAt)
-                throw new ValidationException("End date must be after start date");
-
             EndAt = endAt;
+            Content = NormalizeString(content);
+            Document = NormalizeString(document);
+
+            return Result.Success();
         }
 
-        public void SetContent(string? content)
-        {
-            if (string.IsNullOrEmpty(content))
-                Content = null;
-            else
-            {
-                if (content.Length > 1000)
-                    throw new InvalidOperationException("Task Content can't skip 1000 characters");
-                Content = content.Trim();
-            }
-        }
-
-        public void SetDocument(string? doc)
-        {
-            if (string.IsNullOrEmpty(doc))
-                Document = null;
-            else
-            {
-                if (doc.Length > 2L * 1024 * 1024)
-                    throw new InvalidOperationException("document size can't skip 2MB");
-                Document = doc.Trim();
-            }
-        }
-
-
-
-        public void SetProgress(TaskProgress progress)
-        {
-            Progress = progress;
-
-            // optional: auto-finish if progress == Completed
-            if (progress == TaskProgress.Completed)
-                MarkAsFinished();
-        }
-
-        public void MarkAsFinished()
+        public Result MarkAsFinished()
         {
             if (IsFinished)
-                throw new ValidationException("Task is already finished");
+                return Result.Failure(TaskErrors.AlreadyFinished);
 
             IsFinished = true;
             Progress = TaskProgress.Completed;
+            return Result.Success();
         }
 
-        public void Reopen()
+        public Result Reopen()
         {
             if (!IsFinished)
-                throw new ValidationException("Task is not finished yet");
+                return Result.Failure(TaskErrors.NotFinished);
 
             IsFinished = false;
-            Progress = TaskProgress.InProgress; // or another default
+            Progress = TaskProgress.InProgress;
+            return Result.Success();
         }
 
-        public void AssignToDeveloper(Guid developerId)
+        public Result UpdateProgress(TaskProgress newProgress)
+        {
+            Progress = newProgress;
+
+            if (newProgress == TaskProgress.Completed)
+            {
+                var finishResult = MarkAsFinished();
+            }
+
+            return Result.Success();
+        }
+
+        public Result AssignToDeveloper(Guid developerId)
         {
             if (developerId == Guid.Empty)
-                throw new ValidationException("Invalid developer Id");
+                return Result.Failure(TaskErrors.InvalidDeveloper);
 
             AssignedToDeveloperId = developerId;
+            return Result.Success();
         }
+
+        // Validation Logic
+        private static Error Validate(
+            DateTimeOffset startAt,
+            DateTimeOffset endAt,
+            string? content,
+            string? document)
+        {
+            if (startAt == default)
+                return TaskErrors.EmptyStartDate;
+
+            if (endAt == default)
+                return TaskErrors.EmptyEndDate;
+
+            if (startAt >= endAt)
+                return TaskErrors.InvalidDateRange;
+
+            if (content?.Length > 1000)
+                return TaskErrors.ContentTooLong;
+
+            if (document?.Length > 2 * 1024 * 1024)
+                return TaskErrors.DocumentTooLarge;
+
+            return Error.None;
+        }
+
+        private static string? NormalizeString(string? input)
+        {
+            return string.IsNullOrWhiteSpace(input) ? null : input.Trim();
+        }
+
     }
 }

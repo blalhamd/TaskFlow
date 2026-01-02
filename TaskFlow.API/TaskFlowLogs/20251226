@@ -1,0 +1,24 @@
+2025-12-26 09:18:17.550 +02:00 [Warning] [] [Microsoft.EntityFrameworkCore.Model.Validation] [] []: Entity '"Developer"' has a global query filter defined and is the required end of a relationship with the entity '"Comment"'. This may lead to unexpected results when the required entity is filtered out. Either configure the navigation as optional, or define matching query filters for both entities in the navigation. See https://go.microsoft.com/fwlink/?linkid=2131316 for more information.
+2025-12-26 09:18:41.308 +02:00 [Information] [] [Serilog.AspNetCore.RequestLoggingMiddleware] [] []: HTTP "GET" "/swagger" responded 301 in 4.6393 ms
+2025-12-26 09:18:41.383 +02:00 [Information] [] [Serilog.AspNetCore.RequestLoggingMiddleware] [] []: HTTP "GET" "/swagger/index.html" responded 200 in 53.0249 ms
+2025-12-26 09:18:41.861 +02:00 [Information] [] [Serilog.AspNetCore.RequestLoggingMiddleware] [] []: HTTP "GET" "/swagger/index.js" responded 200 in 0.4869 ms
+2025-12-26 09:18:41.908 +02:00 [Information] [] [Serilog.AspNetCore.RequestLoggingMiddleware] [] []: HTTP "GET" "/swagger/index.css" responded 200 in 48.3840 ms
+2025-12-26 09:18:41.931 +02:00 [Information] [] [Serilog.AspNetCore.RequestLoggingMiddleware] [] []: HTTP "GET" "/swagger/swagger-ui-standalone-preset.js" responded 200 in 71.4837 ms
+2025-12-26 09:18:41.932 +02:00 [Information] [] [Serilog.AspNetCore.RequestLoggingMiddleware] [] []: HTTP "GET" "/swagger/swagger-ui.css" responded 200 in 73.1425 ms
+2025-12-26 09:18:41.934 +02:00 [Information] [] [Serilog.AspNetCore.RequestLoggingMiddleware] [] []: HTTP "GET" "/swagger/swagger-ui-bundle.js" responded 200 in 74.0657 ms
+2025-12-26 09:18:43.707 +02:00 [Information] [] [Serilog.AspNetCore.RequestLoggingMiddleware] [] []: HTTP "GET" "/swagger/favicon-32x32.png" responded 200 in 0.8444 ms
+2025-12-26 09:18:43.884 +02:00 [Information] [] [Serilog.AspNetCore.RequestLoggingMiddleware] [] []: HTTP "GET" "/openapi/v1.json" responded 200 in 176.4332 ms
+2025-12-26 09:19:12.659 +02:00 [Warning] [] [TaskFlow.Business.Services.AuthenticationService] [] []: Invalid login attempt with provided credentials.
+2025-12-26 09:19:12.661 +02:00 [Information] [] [TaskFlow.API.Filters.RequestTimeCalculationFilter] [] []: Time took by request is: 15ms
+2025-12-26 09:19:12.663 +02:00 [Error] [] [TaskFlow.API.Middlewares.ErrorHandlingMiddleware] [] []: An unhandled error occurred during request processing for path "/api/v1/Authentication/login"
+TaskFlow.Shared.Exceptions.BadRequestException: Invalid email or password
+   at TaskFlow.Business.Services.AuthenticationService.HandleInvalidLogin() in C:\Users\DELL\Desktop\LinkedinProject\TaskFlow\TaskFlow.Business\Services\AuthenticationService.cs:line 209
+   at TaskFlow.Business.Services.AuthenticationService.LoginAsync(LoginRequest request) in C:\Users\DELL\Desktop\LinkedinProject\TaskFlow\TaskFlow.Business\Services\AuthenticationService.cs:line 36
+   at TaskFlow.API.Controllers.AuthenticationController.LoginAsync(LoginRequest request) in C:\Users\DELL\Desktop\LinkedinProject\TaskFlow\TaskFlow.API\Controllers\AuthenticationController.cs:line 38
+   at lambda_method33(Closure, Object)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.AwaitableObjectResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Logged|12_1(ControllerActionInvoker invoker)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionI
