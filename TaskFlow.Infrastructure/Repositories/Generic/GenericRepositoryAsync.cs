@@ -9,19 +9,19 @@ namespace TaskFlow.Infrastructure.Repositories.Generic
     public class GenericRepositoryAsync<T> : IGenericRepositoryAsync<T> where T : BaseEntity
     {
         private readonly AppDbContext _context;
-        private readonly DbSet<T> _dbSet;
+        protected readonly DbSet<T> _repo;
 
         public GenericRepositoryAsync(AppDbContext context)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
-            _dbSet = _context.Set<T>();
+            _repo = _context.Set<T>();
         }
 
         public async Task<long> CountAsync(Expression<Func<T, bool>>? predicate = null)
         {
             if (predicate == null)
-                return await _dbSet.LongCountAsync();
-            return await _dbSet.LongCountAsync(predicate);
+                return await _repo.LongCountAsync();
+            return await _repo.LongCountAsync(predicate);
         }
 
         public async Task<IReadOnlyList<T>> GetAllAsync(
@@ -31,7 +31,7 @@ namespace TaskFlow.Infrastructure.Repositories.Generic
             int? pageSize = null,
             params Expression<Func<T, object>>[] includes)
         {
-            IQueryable<T> query = _dbSet.AsNoTracking();
+            IQueryable<T> query = _repo.AsNoTracking();
 
             // filtering
             if (predicate != null)
@@ -58,7 +58,7 @@ namespace TaskFlow.Infrastructure.Repositories.Generic
 
         public async Task<T?> GetByIdAsync(Guid id, params Expression<Func<T, object>>[] includes)
         {
-            IQueryable<T> query = _dbSet.AsNoTracking();
+            IQueryable<T> query = _repo.AsNoTracking();
 
             if (includes != null && includes.Length > 0)
             {
@@ -72,7 +72,7 @@ namespace TaskFlow.Infrastructure.Repositories.Generic
         public async Task<T?> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate,
             params Expression<Func<T, object>>[] includes)
         {
-            IQueryable<T> query = _dbSet.AsNoTracking();
+            IQueryable<T> query = _repo.AsNoTracking();
 
             if (includes != null && includes.Length > 0)
             {
@@ -84,20 +84,20 @@ namespace TaskFlow.Infrastructure.Repositories.Generic
         }
 
         public async Task<bool> IsExistAsync(Expression<Func<T, bool>> predicate)
-            => await _dbSet.AnyAsync(predicate);
+            => await _repo.AnyAsync(predicate);
 
         public async Task CreateAsync(T entity, CancellationToken cancellationToken)
-            => await _dbSet.AddAsync(entity);
+            => await _repo.AddAsync(entity);
 
         public Task UpdateAsync(T entity, CancellationToken cancellationToken)
         {
-            _dbSet.Update(entity);
+            _repo.Update(entity);
             return Task.CompletedTask;
         }
 
         public Task DeleteAsync(T entity, CancellationToken cancellationToken)
         {
-            _dbSet.Remove(entity);
+            _repo.Remove(entity);
             return Task.CompletedTask;
         }
     }

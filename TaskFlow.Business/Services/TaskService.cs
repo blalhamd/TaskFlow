@@ -80,7 +80,7 @@ namespace TaskFlow.Business.Services
 
             try
             {
-                await _unitOfWork.Repository<TaskEntity>().CreateAsync(result.Value, cancellation);
+                await _unitOfWork.TaskRepositoryAsync.CreateAsync(result.Value, cancellation);
                 await _unitOfWork.SaveChangesAsync(cancellation);
 
                 var taskVM = MapToModel(result.Value);
@@ -101,7 +101,7 @@ namespace TaskFlow.Business.Services
         {
             _logger.LogInformation("Attempting to change status of task {TaskId}", taskId);
 
-            var task = await _unitOfWork.Repository<TaskEntity>().GetByIdAsync(taskId);
+            var task = await _unitOfWork.TaskRepositoryAsync.GetByIdAsync(taskId);
             if (task is null)
                 return Result.Failure(TaskErrors.NotFound);
 
@@ -112,7 +112,7 @@ namespace TaskFlow.Business.Services
             if (!result.IsSuccess)
                 return Result.Failure(result.Error);
 
-            await _unitOfWork.Repository<TaskEntity>().UpdateAsync(task, cancellationToken);
+            await _unitOfWork.TaskRepositoryAsync.UpdateAsync(task, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("Task progress changed successfully");
@@ -124,11 +124,11 @@ namespace TaskFlow.Business.Services
         {
             _logger.LogInformation("Attempting to delete task with {TaskId}", taskId);
 
-            var task = await _unitOfWork.Repository<TaskEntity>().GetByIdAsync(taskId);
+            var task = await _unitOfWork.TaskRepositoryAsync.GetByIdAsync(taskId);
             if (task is null)
                 return Result.Failure(TaskErrors.NotFound);
 
-            await _unitOfWork.Repository<TaskEntity>().DeleteAsync(task, cancellationToken);
+            await _unitOfWork.TaskRepositoryAsync.DeleteAsync(task, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("Task with {TaskId} deleted successfully", taskId);
@@ -141,7 +141,7 @@ namespace TaskFlow.Business.Services
         {
             _logger.LogInformation("Attempting to get task by {TaskId}", taskId);
 
-            var task = await _unitOfWork.Repository<TaskEntity>().GetByIdAsync(taskId);
+            var task = await _unitOfWork.TaskRepositoryAsync.GetByIdAsync(taskId);
             if (task is null)
                 return ValueResult<TaskEntityViewModel>.Failure(TaskErrors.NotFound);
 
@@ -152,7 +152,7 @@ namespace TaskFlow.Business.Services
         {
             _logger.LogInformation("Attempting to get tasks for {UserId} with paging", userId);
 
-            var developer = await _unitOfWork.Repository<Developer>()
+            var developer = await _unitOfWork.DeveloperRepositoryAsync
                 .FirstOrDefaultAsync(x => x.UserId == userId);
 
             if (developer is null)
@@ -161,10 +161,10 @@ namespace TaskFlow.Business.Services
             pageNumber = Math.Max(pageNumber, 1);
             pageSize = Math.Clamp(pageSize, 1, 10);
 
-            var tasks = await _unitOfWork.Repository<TaskEntity>()
+            var tasks = await _unitOfWork.TaskRepositoryAsync
                 .GetAllAsync(x => x.AssignedToDeveloperId == developer.Id, null, pageNumber, pageSize);
 
-            var totalCount = await _unitOfWork.Repository<TaskEntity>().CountAsync(x => x.AssignedToDeveloperId == developer.Id);
+            var totalCount = await _unitOfWork.TaskRepositoryAsync.CountAsync(x => x.AssignedToDeveloperId == developer.Id);
 
             var tasksVM = tasks.Select(MapToModel).ToList();
 
@@ -179,10 +179,10 @@ namespace TaskFlow.Business.Services
             pageNumber = Math.Max(pageNumber, 1);
             pageSize = Math.Clamp(pageSize, 1, 10);
 
-            var tasks = await _unitOfWork.Repository<TaskEntity>()
+            var tasks = await _unitOfWork.TaskRepositoryAsync
                 .GetAllAsync(null, null, pageNumber, pageSize);
 
-            var totalCount = await _unitOfWork.Repository<TaskEntity>().CountAsync();
+            var totalCount = await _unitOfWork.TaskRepositoryAsync.CountAsync();
 
             var tasksVM = tasks.Select(MapToModel).ToList();
 
@@ -196,7 +196,7 @@ namespace TaskFlow.Business.Services
             pageNumber = Math.Max(pageNumber, 1);
             pageSize = Math.Clamp(pageSize, 1, 10);
 
-            var taskRepo = _unitOfWork.Repository<TaskEntity>();
+            var taskRepo = _unitOfWork.TaskRepositoryAsync;
 
             var tasks = await taskRepo.GetAllAsync(x => x.Progress == taskProgress,
                                                         x => x.OrderByDescending(x => x.CreatedAt),
@@ -220,7 +220,7 @@ namespace TaskFlow.Business.Services
                 return ValueResult<TaskEntityViewModel>.Failure(new Error(error.ErrorCode, error.ErrorMessage, ErrorType.Validation));
             }
 
-            var task = await _unitOfWork.Repository<TaskEntity>().FirstOrDefaultAsync(x => x.Id == taskEntity.Id);
+            var task = await _unitOfWork.TaskRepositoryAsync.FirstOrDefaultAsync(x => x.Id == taskEntity.Id, null!);
             if(task is null)
                 return ValueResult<TaskEntityViewModel>.Failure(TaskErrors.NotFound);
 
@@ -242,7 +242,7 @@ namespace TaskFlow.Business.Services
 
             try
             {
-                await _unitOfWork.Repository<TaskEntity>().UpdateAsync(task, cancellationToken);
+                await _unitOfWork.TaskRepositoryAsync.UpdateAsync(task, cancellationToken);
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
 
                 var taskVM = MapToTaskVM(task);
@@ -266,11 +266,11 @@ namespace TaskFlow.Business.Services
 
         public async Task<ValueResult<CommentViewModel>> AddCommentToTask(Guid userId, Guid taskId, CreateCommentRequest request, CancellationToken cancellationToken)
         {
-            var developer = await _unitOfWork.Repository<Developer>().FirstOrDefaultAsync(x => x.UserId == userId);
+            var developer = await _unitOfWork.DeveloperRepositoryAsync.FirstOrDefaultAsync(x => x.UserId == userId);
             if (developer is null)
                 return ValueResult<CommentViewModel>.Failure(UserErrors.NotFound);
 
-            var task = await _unitOfWork.Repository<TaskEntity>().FirstOrDefaultAsync(x => x.Id == taskId, x => x.AssignedToDeveloper);
+            var task = await _unitOfWork.TaskRepositoryAsync.FirstOrDefaultAsync(x => x.Id == taskId, x => x.AssignedToDeveloper);
             if (task is null)
                 return ValueResult<CommentViewModel>.Failure(TaskErrors.NotFound);
 
@@ -281,7 +281,7 @@ namespace TaskFlow.Business.Services
 
             task.Comments.Add(result.Value);
 
-            await _unitOfWork.Repository<TaskEntity>().UpdateAsync(task, cancellationToken);
+            await _unitOfWork.TaskRepositoryAsync.UpdateAsync(task, cancellationToken);
             var success = await _unitOfWork.SaveChangesAsync(cancellationToken) > 0;
 
             if (success)
@@ -304,7 +304,7 @@ namespace TaskFlow.Business.Services
 
         public async Task<ValueResult<List<CommentViewModel>>> GetCommentsForTask(Guid taskId)
         {
-            var taskDto = await _unitOfWork.taskRepositoryAsync.FirstOrDefaultAsync(x => x.Id == taskId);
+            var taskDto = await _unitOfWork.TaskRepositoryAsync.FirstOrDefaultAsync(x => x.Id == taskId);
             if (taskDto is null)
                 return ValueResult<List<CommentViewModel>>.Failure(TaskErrors.NotFound);
 

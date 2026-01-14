@@ -1,36 +1,28 @@
 ﻿using Microsoft.EntityFrameworkCore.Storage;
-using TaskFlow.Core.IRepositories.Generic;
+using Microsoft.Extensions.DependencyInjection;
 using TaskFlow.Core.IRepositories.Non_Generic;
 using TaskFlow.Core.IUnit;
-using TaskFlow.Domain.Entities.Base;
 using TaskFlow.Infrastructure.Data.context;
-using TaskFlow.Infrastructure.Repositories.Generic;
+using TaskFlow.Infrastructure.Repositories.Non_Generic;
 
 namespace TaskFlow.Infrastructure.Unit
 {
     public class UnitOfWorkAsync : IUnitOfWorkAsync
     {
+        private readonly IServiceProvider _serviceProvider;
         private readonly AppDbContext _context;
-        private readonly Dictionary<Type, object> _repositories;
         private IDbContextTransaction? _transaction;
-        public ITaskRepositoryAsync taskRepositoryAsync { get; }
 
-        public UnitOfWorkAsync(AppDbContext context, ITaskRepositoryAsync taskRepositoryAsync)
+        public UnitOfWorkAsync(AppDbContext context, IServiceProvider serviceProvider)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
-            _repositories = new Dictionary<Type, object>();
-            this.taskRepositoryAsync = taskRepositoryAsync;
+            _serviceProvider = serviceProvider;
         }
+        public ITaskRepositoryAsync TaskRepositoryAsync
+            => _serviceProvider.GetRequiredService<TaskRepositoryAsync>();
 
-        public IGenericRepositoryAsync<T> Repository<T>() where T : BaseEntity
-        {
-            if (_repositories.ContainsKey(typeof(T)))
-                return (IGenericRepositoryAsync<T>)_repositories[typeof(T)];
-
-            var repo = new GenericRepositoryAsync<T>(_context);
-            _repositories[typeof(T)] = repo;
-            return repo;
-        }
+        public IDeveloperRepositoryAsync DeveloperRepositoryAsync
+             => _serviceProvider.GetRequiredService<DeveloperRepositoryAsync>();
 
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {

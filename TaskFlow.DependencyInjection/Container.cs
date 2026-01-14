@@ -92,13 +92,13 @@ namespace TaskFlow.DependencyInjection
         {
             services.AddScoped(typeof(IGenericRepositoryAsync<>), typeof(GenericRepositoryAsync<>));
             services.AddScoped(typeof(ITaskRepositoryAsync), typeof(TaskRepositoryAsync));
+            services.AddScoped(typeof(IDeveloperRepositoryAsync), typeof(DeveloperRepositoryAsync));
 
             return services;
         }
 
         private static IServiceCollection RegisterUnitOfWork(this IServiceCollection services)
         {
-
             services.AddScoped<IUnitOfWorkAsync, UnitOfWorkAsync>();
 
             return services;

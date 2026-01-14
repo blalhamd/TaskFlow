@@ -46,7 +46,7 @@ namespace TaskFlow.Business.Services
 
             pageIndex = Math.Max(pageIndex, 1);
             pageSize = Math.Clamp(pageSize, 1, 10);
-            var repo = _unitOfWork.Repository<Developer>();
+            var repo = _unitOfWork.DeveloperRepositoryAsync;
 
             var totalCount = await repo.CountAsync();
             var developers = await repo.GetAllAsync(predicate: null, orderBy: null, pageIndex, pageSize, includes: null!);
@@ -75,7 +75,7 @@ namespace TaskFlow.Business.Services
             var trimmedFullName = request.FullName.Trim();
             var trimmedJobTitle = request.JobTitle.Trim();
 
-            var isExist = await _unitOfWork.Repository<Developer>()
+            var isExist = await _unitOfWork.DeveloperRepositoryAsync
                 .IsExistAsync(d => d.FullName == trimmedFullName &&
                                    d.JobTitle == trimmedJobTitle &&
                                    d.YearOfExperience == request.YearOfExperience);
@@ -114,7 +114,7 @@ namespace TaskFlow.Business.Services
                     return Result.Failure(developerCreated.Error);
                 }
 
-                await _unitOfWork.Repository<Developer>().CreateAsync(developerCreated.Value, cancellationToken);
+                await _unitOfWork.DeveloperRepositoryAsync.CreateAsync(developerCreated.Value, cancellationToken);
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
 
                 await _userManager.AddToRoleAsync(user, ApplicationConstants.Developer);
@@ -140,7 +140,7 @@ namespace TaskFlow.Business.Services
         {
             _logger.LogInformation("Get developer with {Id}", id);
 
-            var developer = await _unitOfWork.Repository<Developer>().GetByIdAsync(id, includes: x => x.AssignedTasks);
+            var developer = await _unitOfWork.DeveloperRepositoryAsync.GetByIdAsync(id, includes: x => x.AssignedTasks);
             if (developer is null)
                 return ValueResult<DeveloperViewViewModel>.Failure(DeveloperErrors.NotFound);
 
@@ -154,7 +154,7 @@ namespace TaskFlow.Business.Services
         {
             _logger.LogInformation("Updating developer with Id: {Id}", request.Id);
 
-            var repo = _unitOfWork.Repository<Developer>();
+            var repo = _unitOfWork.DeveloperRepositoryAsync;
             var developer = await repo.FirstOrDefaultAsync(x => x.Id == request.Id);
             if (developer is null)
                 return Result.Failure(DeveloperErrors.NotFound);
@@ -203,7 +203,7 @@ namespace TaskFlow.Business.Services
             _logger.LogInformation("Deleting developer with Id: {Id}", developerId);
 
             // fetch developer from DB
-            var repo = _unitOfWork.Repository<Developer>();
+            var repo = _unitOfWork.DeveloperRepositoryAsync;
             var developer = await repo.FirstOrDefaultAsync(x => x.Id == developerId);
             if (developer is null)
                 return Result.Failure(DeveloperErrors.NotFound);

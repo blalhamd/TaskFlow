@@ -10,15 +10,13 @@ namespace TaskFlow.Infrastructure.Repositories.Non_Generic
 {
     public class TaskRepositoryAsync : GenericRepositoryAsync<TaskEntity>, ITaskRepositoryAsync
     {
-        private readonly AppDbContext _context;
         public TaskRepositoryAsync(AppDbContext context) : base(context)
         {
-            _context = context;
         }
 
         public async Task<TaskDto?> FirstOrDefaultAsync(Expression<Func<TaskEntity, bool>> predicate)
         {
-            var task = await _context.Tasks.Where(predicate).Select(x => new TaskDto
+            var task = await _repo.Where(predicate).Select(x => new TaskDto
             {
                 CommentDtos = x.Comments.Select(c => new CommentDto
                 {
