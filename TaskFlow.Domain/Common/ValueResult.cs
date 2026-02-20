@@ -2,7 +2,7 @@
 {
     public class ValueResult<T> : Result
     {
-        public T Value { get; }
+        public T Value { get; } = default!;
         public ValueResult(bool isSuccess, T value, Error error) : base(isSuccess, error)
         {
             Value = value;
